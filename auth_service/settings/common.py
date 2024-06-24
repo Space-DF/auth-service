@@ -29,7 +29,7 @@ SHARED_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_yasg",
-    "organization",
+    "common.apps.organization",
 ]
 
 TENANT_APPS = [
