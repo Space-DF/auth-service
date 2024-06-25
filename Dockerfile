@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10-alpine
 ENV PYTHONUNBUFFERED 1
 
 ARG ENV
@@ -10,6 +10,7 @@ ARG DB_HOST
 ARG CORS_ALLOWED_ORIGINS
 ARG HOST
 ARG DEFAULT_TENANT_HOST
+ARG CELERY_BROKER_URL
 
 # Allows docker to cache installed dependencies between builds
 COPY ./auth_service/requirements.txt requirements.txt
@@ -35,6 +36,7 @@ ENV DB_HOST ${DB_HOST}
 ENV CORS_ALLOWED_ORIGINS ${CORS_ALLOWED_ORIGINS}
 ENV HOST ${HOST}
 ENV DEFAULT_TENANT_HOST ${DEFAULT_TENANT_HOST}
+ENV CELERY_BROKER_URL ${CELERY_BROKER_URL}
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
 
