@@ -14,6 +14,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from kombu import Exchange, Queue
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -178,3 +180,19 @@ SWAGGER_SETTINGS = {
 # Multi-tenants
 TENANT_MODEL = "organization.Organization"
 TENANT_DOMAIN_MODEL = "organization.Domain"
+
+# Celery
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_QUEUES = (
+    Queue(
+        "auth_new_organization",
+        exchange=Exchange("new_organization", type="fanout"),
+        routing_key="new_organization",
+    ),
+)
+CELERY_TASK_ROUTES = {
+    "spacedf.tasks.new_organization": {
+        "queue": "auth_new_organization",
+        "routing_key": "new_organization",
+    }
+}

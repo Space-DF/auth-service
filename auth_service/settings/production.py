@@ -16,6 +16,7 @@ SECRET_KEY = os.getenv(  # noqa
 ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS", "*")]  # noqa
 
 HOST = os.getenv("HOST", "http://localhost:8000/")  # noqa
+DEFAULT_TENANT_HOST = os.getenv("DEFAULT_TENANT_HOST", "localhost")  # noqa
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -35,3 +36,8 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = os.getenv(  # noqa
     "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
 ).split(",")
+
+# Celery
+CELERY_BROKER_URL = os.getenv(  # noqa
+    "CELERY_BROKER_URL", "amqp://guest:guest@localhost"
+)

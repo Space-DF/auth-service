@@ -16,10 +16,13 @@ Including another URLconf
 
 from common.swagger.views import get_tenant_schema_view
 from django.contrib import admin
+from django.db import connection
 from django.http import HttpResponse
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from rest_framework import permissions
+
+from .celery import app as celery_app
 
 schema_view = get_tenant_schema_view(
     openapi.Info(
@@ -34,6 +37,13 @@ schema_view = get_tenant_schema_view(
     permission_classes=[permissions.AllowAny],
 )
 
+
+def health_check(_):
+    if not connection.ensure_connection() and celery_app.control.inspect().active():
+        return HttpResponse("OK")
+    return HttpResponse(status=500)
+
+
 urlpatterns = [
     # docs
     re_path(
@@ -42,7 +52,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     # health
-    path("api/health", lambda request: HttpResponse("OK")),
+    path("api/health", health_check),
     # admin
     path("admin/", admin.site.urls),
     # apis

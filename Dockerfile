@@ -9,6 +9,7 @@ ARG DB_PASSWORD
 ARG DB_HOST
 ARG CORS_ALLOWED_ORIGINS
 ARG HOST
+ARG DEFAULT_TENANT_HOST
 
 # Allows docker to cache installed dependencies between builds
 COPY ./auth_service/requirements.txt requirements.txt
@@ -33,6 +34,7 @@ ENV DB_PASSWORD ${DB_PASSWORD}
 ENV DB_HOST ${DB_HOST}
 ENV CORS_ALLOWED_ORIGINS ${CORS_ALLOWED_ORIGINS}
 ENV HOST ${HOST}
+ENV DEFAULT_TENANT_HOST ${DEFAULT_TENANT_HOST}
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
 

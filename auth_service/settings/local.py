@@ -16,6 +16,7 @@ SECRET_KEY = os.getenv(  # noqa
 ALLOWED_HOSTS = ["*"]
 
 HOST = "http://localhost:8000/"
+DEFAULT_TENANT_HOST = "localhost"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -33,3 +34,6 @@ DATABASES = {
 
 # CORS config
 CORS_ORIGIN_ALLOW_ALL = True
+
+# Celery
+CELERY_BROKER_URL = "amqp://guest:guest@localhost"

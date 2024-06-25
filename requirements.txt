@@ -4,6 +4,7 @@ django-environ==0.11.2
 gunicorn==22.0.0
 psycopg2==2.9.9
 django_tenants==3.6.1
+celery==5.4.0
 
 # For the persistence stores
 psycopg2-binary==2.9.9
