@@ -6,6 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
+    # sys.path.append(os.path.abspath(os.path.join('..', 'pkg')))  # Import pkg without install
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "auth_service.settings.local")
     try:
         from django.core.management import execute_from_command_line

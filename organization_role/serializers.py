@@ -1,10 +1,14 @@
+from organization_role.models import (
+    OrganizationPolicy,
+    OrganizationRole,
+    OrganizationRoleUser,
+)
 from rest_framework import serializers
-from space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 
 
-class SpacePolicySerializer(serializers.ModelSerializer):
+class OrganizationPolicySerializer(serializers.ModelSerializer):
     class Meta:
-        model = SpacePolicy
+        model = OrganizationPolicy
         fields = "__all__"
         extra_kwargs = {
             "id": {"read_only": True},
@@ -13,9 +17,9 @@ class SpacePolicySerializer(serializers.ModelSerializer):
         }
 
 
-class SpaceRoleSerializer(serializers.ModelSerializer):
+class OrganizationRoleSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SpaceRole
+        model = OrganizationRole
         fields = "__all__"
         extra_kwargs = {
             "id": {"read_only": True},
@@ -24,9 +28,9 @@ class SpaceRoleSerializer(serializers.ModelSerializer):
         }
 
 
-class SpaceRoleUserSerializer(serializers.ModelSerializer):
+class OrganizationRoleUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SpaceRoleUser
+        model = OrganizationRoleUser
         fields = "__all__"
         extra_kwargs = {
             "id": {"read_only": True},

@@ -1,9 +1,13 @@
 from django.contrib import admin
-from space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
+from organization_role.models import (
+    OrganizationPolicy,
+    OrganizationRole,
+    OrganizationRoleUser,
+)
 
 
-@admin.register(SpacePolicy)
-class SpacePolicyAdmin(admin.ModelAdmin):
+@admin.register(OrganizationPolicy)
+class OrganizationPolicyAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "name",
@@ -15,22 +19,21 @@ class SpacePolicyAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(SpaceRole)
-class SpaceRoleAdmin(admin.ModelAdmin):
+@admin.register(OrganizationRole)
+class OrganizationRoleAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "name",
-        "space",
         "created_at",
         "updated_at",
     )
 
 
-@admin.register(SpaceRoleUser)
-class SpaceRoleUserAdmin(admin.ModelAdmin):
+@admin.register(OrganizationRoleUser)
+class OrganizationRoleUserAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "space_role",
+        "organization_role",
         "organization_user",
         "created_at",
         "updated_at",

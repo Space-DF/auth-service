@@ -1,8 +1,10 @@
 from django.urls import path
 from space_role.views import (
     ListCreateSpaceRoleView,
-    ListPolicyView,
-    RetrievePolicyView,
+    ListSpacePolicyView,
+    ListSpaceRoleUserView,
+    RetrieveDeleteSpaceRoleUserView,
+    RetrieveSpacePolicyView,
     UpdateDeleteSpaceRoleView,
 )
 
@@ -18,11 +20,19 @@ urlpatterns = [
         UpdateDeleteSpaceRoleView.as_view(),
     ),
     path(
-        "policies",
-        ListPolicyView.as_view(),
+        "space-policies",
+        ListSpacePolicyView.as_view(),
     ),
     path(
-        "policies/<str:id>",
-        RetrievePolicyView.as_view(),
+        "space-policies/<str:id>",
+        RetrieveSpacePolicyView.as_view(),
+    ),
+    path(
+        "space-role-users",
+        ListSpaceRoleUserView.as_view(),
+    ),
+    path(
+        "space-role-users/<str:id>",
+        RetrieveDeleteSpaceRoleUserView.as_view(),
     ),
 ]

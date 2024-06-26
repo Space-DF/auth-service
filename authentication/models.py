@@ -46,6 +46,7 @@ class OrganizationUser(AbstractUser):
 
     username = None
     email = models.EmailField(_("email address"), unique=True)
+    is_owner = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

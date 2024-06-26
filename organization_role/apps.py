@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SpaceRoleUserConfig(AppConfig):
+class OrganizationRoleConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "space_role_user"
+    name = "organization_role"

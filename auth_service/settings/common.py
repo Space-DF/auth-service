@@ -39,9 +39,9 @@ TENANT_APPS = [
     "django.contrib.auth",
     "authentication",
     "refresh_tokens",
+    "organization_role",
     "space",
     "space_role",
-    "space_role_user",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -196,3 +196,5 @@ CELERY_TASK_ROUTES = {
         "routing_key": "new_organization",
     }
 }
+
+NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"

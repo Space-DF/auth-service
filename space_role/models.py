@@ -1,16 +1,17 @@
+from authentication.models import OrganizationUser
 from common.models.base_model import BaseModel
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from space.models import Space
-from space_role.constants import Permission
+from space_role.constants import SpacePermission
 
 
-class Policy(BaseModel):
+class SpacePolicy(BaseModel):
     name = models.CharField(max_length=256)
     description = models.TextField()
     tags = ArrayField(models.CharField(max_length=256))
     permissions = ArrayField(
-        models.CharField(max_length=256, choices=Permission.choices)
+        models.CharField(max_length=256, choices=SpacePermission.choices)
     )
 
 
@@ -19,4 +20,15 @@ class SpaceRole(BaseModel):
     space = models.ForeignKey(
         Space, related_name="space_role", on_delete=models.CASCADE
     )
-    policies = models.ManyToManyField(Policy)
+    policies = models.ManyToManyField(SpacePolicy)
+
+
+class SpaceRoleUser(BaseModel):
+    space_role = models.ForeignKey(
+        SpaceRole,
+        related_name="space_role_user",
+        on_delete=models.CASCADE,
+    )
+    organization_user = models.ForeignKey(
+        OrganizationUser, related_name="space_role_user", on_delete=models.CASCADE
+    )

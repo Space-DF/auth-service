@@ -2,14 +2,23 @@ from common.pagination.base_pagination import BasePagination
 from common.permissions.constants import DELETE_METHOD, POST_METHOD, UPDATE_METHODS
 from common.permissions.permission_classes import is_method
 from common.permissions.permission_condition import PermissionCondition
-from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
-from core.permissions import has_permission_access
+from common.views.space import (
+    SpaceListAPIView,
+    SpaceListCreateAPIView,
+    SpaceRetrieveDestroyAPIView,
+    SpaceRetrieveUpdateDestroyAPIView,
+)
+from core.permissions import has_space_permission_access
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
-from space_role.constants import Permission
-from space_role.models import Policy, SpaceRole
-from space_role.serializers import PolicySerializer, SpaceRoleSerializer
+from space_role.constants import SpacePermission
+from space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
+from space_role.serializers import (
+    SpacePolicySerializer,
+    SpaceRoleSerializer,
+    SpaceRoleUserSerializer,
+)
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -21,11 +30,11 @@ class ListCreateSpaceRoleView(SpaceListCreateAPIView):
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
-                has_permission_access(Permission.READ_ORGANIZATION_ROLE),
+                has_space_permission_access(SpacePermission.READ_SPACE_ROLE),
             ),
             PermissionCondition.And(
                 is_method(POST_METHOD),
-                has_permission_access(Permission.CREATE_ORGANIZATION_ROLE),
+                has_space_permission_access(SpacePermission.CREATE_SPACE_ROLE),
             ),
         )
     ]
@@ -45,24 +54,24 @@ class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
-                has_permission_access(Permission.READ_ORGANIZATION_ROLE),
+                has_space_permission_access(SpacePermission.READ_SPACE_ROLE),
             ),
             PermissionCondition.And(
                 is_method(UPDATE_METHODS),
-                has_permission_access(Permission.CREATE_ORGANIZATION_ROLE),
+                has_space_permission_access(SpacePermission.CREATE_SPACE_ROLE),
             ),
             PermissionCondition.And(
                 is_method(DELETE_METHOD),
-                has_permission_access(Permission.DELETE_ORGANIZATION_ROLE),
+                has_space_permission_access(SpacePermission.DELETE_SPACE_ROLE),
             ),
         )
     ]
 
 
-class ListPolicyView(ListAPIView):
-    model = Policy
-    serializer_class = PolicySerializer
-    queryset = Policy.objects.all()
+class ListSpacePolicyView(ListAPIView):
+    model = SpacePolicy
+    serializer_class = SpacePolicySerializer
+    queryset = SpacePolicy.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = BasePagination
     filter_backends = [OrderingFilter, SearchFilter]
@@ -70,9 +79,43 @@ class ListPolicyView(ListAPIView):
     search_fields = ["name"]
 
 
-class RetrievePolicyView(RetrieveAPIView):
-    model = Policy
-    serializer_class = PolicySerializer
+class RetrieveSpacePolicyView(RetrieveAPIView):
+    model = SpacePolicy
+    serializer_class = SpacePolicySerializer
     lookup_field = "id"
-    queryset = Policy.objects.all()
+    queryset = SpacePolicy.objects.all()
     permission_classes = [IsAuthenticated]
+
+
+class ListSpaceRoleUserView(SpaceListAPIView):
+    model = SpaceRoleUser
+    serializer_class = SpaceRoleUserSerializer
+    queryset = SpaceRoleUser.objects.all()
+    space_field = "space_role__space"
+    permission_classes = [
+        has_space_permission_access(SpacePermission.READ_SPACE_MEMBER)
+    ]
+    pagination_class = BasePagination
+    filter_backends = [OrderingFilter, SearchFilter]
+    ordering_fields = ["created_at"]
+    search_fields = ["id"]
+
+
+class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveDestroyAPIView):
+    model = SpaceRoleUser
+    serializer_class = SpaceRoleUserSerializer
+    lookup_field = "id"
+    queryset = SpaceRoleUser.objects.all()
+    space_field = "space_role__space"
+    permission_classes = [
+        PermissionCondition.Or(
+            PermissionCondition.And(
+                is_method(SAFE_METHODS),
+                has_space_permission_access(SpacePermission.READ_SPACE_MEMBER),
+            ),
+            PermissionCondition.And(
+                is_method(DELETE_METHOD),
+                has_space_permission_access(SpacePermission.REMOVE_SPACE_MEMBER),
+            ),
+        )
+    ]

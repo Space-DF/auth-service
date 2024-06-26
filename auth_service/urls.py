@@ -57,7 +57,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # apis
     path("api/", include("authentication.urls")),
+    path("api/", include("organization_role.urls")),
     path("api/", include("space.urls")),
     path("api/", include("space_role.urls")),
-    path("api/", include("space_role_user.urls")),
 ]
