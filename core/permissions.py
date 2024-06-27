@@ -13,9 +13,9 @@ def has_space_permission_access(permission):
         __permission = permission
 
         def has_permission(self, request, view):
-            space_slug_name = request.headers.get("space", None)
+            space_slug_name = request.headers.get("X-Space", None)
             if space_slug_name is None:
-                raise ParseError("space is required")
+                raise ParseError("X-Space header is required")
 
             policies = SpacePolicy.objects.filter(
                 spacerole__space__slug_name=space_slug_name,

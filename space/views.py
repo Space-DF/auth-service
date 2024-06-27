@@ -48,10 +48,10 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
         if (
             self.request.method not in SAFE_METHODS
-            or self.request.headers.get("space", None) is not None
+            or self.request.headers.get("X-Space", None) is not None
         ):
             queryset = queryset.filter(
-                slug_name=self.request.headers.get("space", None)
+                slug_name=self.request.headers.get("X-Space", None)
             )
 
         return queryset
@@ -59,7 +59,7 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     def get_object(self):
         obj = get_object_or_404(
             self.get_queryset(),
-            slug_name=self.request.headers.get("space", None),
+            slug_name=self.request.headers.get("X-Space", None),
         )
 
         # May raise a permission denied
@@ -76,7 +76,7 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
     @swagger_auto_schema(manual_parameters=get_space_header_params(required=False))
     def get(self, request, *args, **kwargs):
-        if self.request.headers.get("space", None) is not None:
+        if self.request.headers.get("X-Space", None) is not None:
             return self.retrieve(request, *args, **kwargs)
         else:
             return self.list(request, *args, **kwargs)
