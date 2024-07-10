@@ -1,6 +1,7 @@
 """
 Production settings
 """
+from datetime import timedelta
 
 from .common import *  # noqa
 
@@ -36,6 +37,31 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = os.getenv(  # noqa
     "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
 ).split(",")
+
+# JWT config
+JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")  # noqa
+JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")  # noqa
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": JWT_PRIVATE_KEY,
+    "VERIFYING_KEY": JWT_PUBLIC_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(hours=1),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),
+    "TOKEN_REFRESH_SERIALIZER": "refresh_tokens.serializers.CustomTokenRefreshSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "refresh_tokens.serializers.CustomTokenObtainPairSerializer",
+}
 
 # Celery
 CELERY_BROKER_URL = os.getenv(  # noqa

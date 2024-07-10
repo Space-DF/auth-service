@@ -26,7 +26,7 @@ from .celery import app as celery_app
 
 schema_view = get_tenant_schema_view(
     openapi.Info(
-        title="SPACEDF CONSOLE API",
+        title="SPACEDF AUTH API",
         default_version="v1",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="contact@snippets.local"),
@@ -60,4 +60,6 @@ urlpatterns = [
     path("api/", include("organization_role.urls")),
     path("api/", include("space.urls")),
     path("api/", include("space_role.urls")),
+    # well-known
+    path("api/", include("common.apps.jwks.urls")),
 ]

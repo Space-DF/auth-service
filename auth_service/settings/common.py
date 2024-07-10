@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
-from datetime import timedelta
 from pathlib import Path
 
 from kombu import Exchange, Queue
@@ -32,6 +31,7 @@ SHARED_APPS = [
     "corsheaders",
     "drf_yasg",
     "common.apps.organization",
+    "common.apps.jwks",
 ]
 
 TENANT_APPS = [
@@ -47,7 +47,7 @@ TENANT_APPS = [
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 MIDDLEWARE = [
-    "django_tenants.middleware.main.TenantMainMiddleware",
+    "common.middlewares.tenant_middleware.TenantMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -148,28 +148,6 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 
-# JWT config
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": True,
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": "t3llqPQAgIfXbfFwlChpujYOFsjXz2sI",
-    "VERIFYING_KEY": None,
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "USER_ID_FIELD": "id",
-    "USER_ID_CLAIM": "user_id",
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "JTI_CLAIM": "jti",
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(hours=1),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),
-    "TOKEN_REFRESH_SERIALIZER": "refresh_tokens.serializers.CustomTokenRefreshSerializer",
-    "TOKEN_OBTAIN_SERIALIZER": "refresh_tokens.serializers.CustomTokenObtainPairSerializer",
-}
-
 # Docs
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
@@ -198,3 +176,6 @@ CELERY_TASK_ROUTES = {
 }
 
 NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
+
+# Middlewares
+PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]

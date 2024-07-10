@@ -11,8 +11,11 @@ ARG CORS_ALLOWED_ORIGINS
 ARG HOST
 ARG DEFAULT_TENANT_HOST
 ARG CELERY_BROKER_URL
+ARG JWT_PRIVATE_KEY
+ARG JWT_PUBLIC_KEY
 
 # Allows docker to cache installed dependencies between builds
+RUN apk add build-base libffi-dev
 COPY ./auth_service/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY ./pkg pkg
@@ -37,6 +40,8 @@ ENV CORS_ALLOWED_ORIGINS ${CORS_ALLOWED_ORIGINS}
 ENV HOST ${HOST}
 ENV DEFAULT_TENANT_HOST ${DEFAULT_TENANT_HOST}
 ENV CELERY_BROKER_URL ${CELERY_BROKER_URL}
+ENV JWT_PRIVATE_KEY ${JWT_PRIVATE_KEY}
+ENV JWT_PUBLIC_KEY ${JWT_PUBLIC_KEY}
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
 

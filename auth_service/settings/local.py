@@ -1,6 +1,7 @@
 """
 Local settings
 """
+from datetime import timedelta
 
 from .common import *  # noqa
 
@@ -34,6 +35,39 @@ DATABASES = {
 
 # CORS config
 CORS_ORIGIN_ALLOW_ALL = True
+
+# JWT config
+JWT_PRIVATE_KEY = (
+    open(f"{BASE_DIR}/settings/example_key/private_key.pem").read()  # noqa
+    if os.path.isfile(f"{BASE_DIR}/settings/example_key/private_key.pem")  # noqa
+    else None
+)
+JWT_PUBLIC_KEY = (
+    open(f"{BASE_DIR}/settings/example_key/public_key.pem").read()  # noqa
+    if os.path.isfile(f"{BASE_DIR}/settings/example_key/public_key.pem")  # noqa
+    else None
+)
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": JWT_PRIVATE_KEY,
+    "VERIFYING_KEY": JWT_PUBLIC_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(hours=1),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),
+    "TOKEN_REFRESH_SERIALIZER": "refresh_tokens.serializers.CustomTokenRefreshSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "refresh_tokens.serializers.CustomTokenObtainPairSerializer",
+}
 
 # Celery
 CELERY_BROKER_URL = "amqp://guest:guest@localhost"
