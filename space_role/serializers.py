@@ -1,5 +1,5 @@
+from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from rest_framework import serializers
-from space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 
 
 class SpacePolicySerializer(serializers.ModelSerializer):

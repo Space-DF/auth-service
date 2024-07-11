@@ -1,4 +1,4 @@
-from authentication.models import OrganizationUser
+from common.apps.organization_user.models import OrganizationUser
 from common.models.base_model import BaseModel
 from django.db import models
 from django.utils.translation import gettext_lazy as _

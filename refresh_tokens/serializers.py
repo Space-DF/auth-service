@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from refresh_tokens.jwts import CustomRefreshToken
 from refresh_tokens.models import (
     RefreshToken,
     RefreshTokenFamily,
@@ -14,6 +15,8 @@ from rest_framework_simplejwt.settings import api_settings
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    token_class = CustomRefreshToken
+
     def validate(self, attrs):
         data = super().validate(attrs)
 
@@ -32,6 +35,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    token_class = CustomRefreshToken
+
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
 

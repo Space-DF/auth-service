@@ -39,9 +39,10 @@ TENANT_APPS = [
     "django.contrib.auth",
     "authentication",
     "refresh_tokens",
-    "organization_role",
-    "space",
-    "space_role",
+    "common.apps.organization_user",
+    "common.apps.organization_role",
+    "common.apps.space",
+    "common.apps.space_role",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -141,7 +142,7 @@ REST_FRAMEWORK = {
 }
 
 # auth config
-AUTH_USER_MODEL = "authentication.OrganizationUser"
+AUTH_USER_MODEL = "organization_user.OrganizationUser"
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
@@ -175,7 +176,9 @@ CELERY_TASK_ROUTES = {
     }
 }
 
-NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
+NEW_ORGANIZATION_HANDLER = (
+    "common.apps.organization_role.handlers.NewOrganizationHandler"
+)
 
 # Middlewares
 PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]

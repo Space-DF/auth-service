@@ -1,4 +1,4 @@
-from authentication.models import OrganizationUser
+from common.apps.organization_user.models import OrganizationUser
 from rest_framework import serializers
 
 

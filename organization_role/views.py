@@ -1,14 +1,16 @@
-from common.pagination.base_pagination import BasePagination
-from common.permissions.constants import DELETE_METHOD, POST_METHOD, UPDATE_METHODS
-from common.permissions.permission_classes import is_method
-from common.permissions.permission_condition import PermissionCondition
-from core.permissions import has_organization_permission_access
-from organization_role.constants import OrganizationPermission
-from organization_role.models import (
+from common.apps.organization_role.constants import OrganizationPermission
+from common.apps.organization_role.models import (
     OrganizationPolicy,
     OrganizationRole,
     OrganizationRoleUser,
 )
+from common.pagination.base_pagination import BasePagination
+from common.permissions.constants import DELETE_METHOD, POST_METHOD, UPDATE_METHODS
+from common.permissions.permission_classes import (
+    has_organization_permission_access,
+    is_method,
+)
+from common.permissions.permission_condition import PermissionCondition
 from organization_role.serializers import (
     OrganizationPolicySerializer,
     OrganizationRoleSerializer,

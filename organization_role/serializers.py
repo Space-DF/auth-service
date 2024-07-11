@@ -1,4 +1,4 @@
-from organization_role.models import (
+from common.apps.organization_role.models import (
     OrganizationPolicy,
     OrganizationRole,
     OrganizationRoleUser,

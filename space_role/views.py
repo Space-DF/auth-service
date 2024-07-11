@@ -1,6 +1,8 @@
+from common.apps.space_role.constants import SpacePermission
+from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
 from common.permissions.constants import DELETE_METHOD, POST_METHOD, UPDATE_METHODS
-from common.permissions.permission_classes import is_method
+from common.permissions.permission_classes import has_space_permission_access, is_method
 from common.permissions.permission_condition import PermissionCondition
 from common.views.space import (
     SpaceListAPIView,
@@ -8,12 +10,9 @@ from common.views.space import (
     SpaceRetrieveDestroyAPIView,
     SpaceRetrieveUpdateDestroyAPIView,
 )
-from core.permissions import has_space_permission_access
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
-from space_role.constants import SpacePermission
-from space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from space_role.serializers import (
     SpacePolicySerializer,
     SpaceRoleSerializer,
