@@ -1,3 +1,4 @@
+from common.apps.space.models import Space
 from common.apps.space_role.constants import SpacePermission
 from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
@@ -10,6 +11,9 @@ from common.views.space import (
     SpaceRetrieveDestroyAPIView,
     SpaceRetrieveUpdateDestroyAPIView,
 )
+from django.db import transaction
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
@@ -18,6 +22,7 @@ from space_role.serializers import (
     SpaceRoleSerializer,
     SpaceRoleUserSerializer,
 )
+from space_role.services import create_space_default_role
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -26,6 +31,7 @@ class ListCreateSpaceRoleView(SpaceListCreateAPIView):
     queryset = SpaceRole.objects.all()
     space_field = "space"
     permission_classes = [
+        IsAuthenticated,
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
@@ -35,7 +41,7 @@ class ListCreateSpaceRoleView(SpaceListCreateAPIView):
                 is_method(POST_METHOD),
                 has_space_permission_access(SpacePermission.CREATE_SPACE_ROLE),
             ),
-        )
+        ),
     ]
     pagination_class = BasePagination
     filter_backends = [OrderingFilter, SearchFilter]
@@ -50,6 +56,7 @@ class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
     queryset = SpaceRole.objects.all()
     space_field = "space"
     permission_classes = [
+        IsAuthenticated,
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
@@ -63,7 +70,7 @@ class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
                 is_method(DELETE_METHOD),
                 has_space_permission_access(SpacePermission.DELETE_SPACE_ROLE),
             ),
-        )
+        ),
     ]
 
 
@@ -107,6 +114,7 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveDestroyAPIView):
     queryset = SpaceRoleUser.objects.all()
     space_field = "space_role__space"
     permission_classes = [
+        IsAuthenticated,
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
@@ -116,5 +124,15 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveDestroyAPIView):
                 is_method(DELETE_METHOD),
                 has_space_permission_access(SpacePermission.REMOVE_SPACE_MEMBER),
             ),
-        )
+        ),
     ]
+
+
+@receiver(post_save, sender=Space)
+@transaction.atomic
+def handle_new_space(sender, instance, created, **kwargs):
+    if created:
+        owner_role, _ = create_space_default_role(instance)
+        SpaceRoleUser(
+            organization_user=instance.created_by, space_role=owner_role
+        ).save()

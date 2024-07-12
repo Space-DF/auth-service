@@ -162,6 +162,8 @@ TENANT_DOMAIN_MODEL = "organization.Domain"
 
 # Celery
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_ACKS_LATE = True
+CELERYD_PREFETCH_MULTIPLIER = 1
 CELERY_APP = "auth_service.celery.app"
 SYNCHRONOUS_MODEL = [
     "organizationuser",
@@ -178,9 +180,7 @@ CELERY_TASKS = [
     "common.apps.space",
 ]
 
-NEW_ORGANIZATION_HANDLER = (
-    "common.apps.organization_role.handlers.NewOrganizationHandler"
-)
+NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
 
 # Middlewares
 PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]

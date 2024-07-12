@@ -33,6 +33,7 @@ class ListCreateOrganizationRoleView(ListCreateAPIView):
     queryset = OrganizationRole.objects.all()
     organization_field = "organization"
     permission_classes = [
+        IsAuthenticated,
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
@@ -46,7 +47,7 @@ class ListCreateOrganizationRoleView(ListCreateAPIView):
                     OrganizationPermission.CREATE_ORGANIZATION_ROLE
                 ),
             ),
-        )
+        ),
     ]
     pagination_class = BasePagination
     filter_backends = [OrderingFilter, SearchFilter]
@@ -61,6 +62,7 @@ class UpdateDeleteOrganizationRoleView(RetrieveUpdateDestroyAPIView):
     queryset = OrganizationRole.objects.all()
     organization_field = "organization"
     permission_classes = [
+        IsAuthenticated,
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
@@ -80,7 +82,7 @@ class UpdateDeleteOrganizationRoleView(RetrieveUpdateDestroyAPIView):
                     OrganizationPermission.DELETE_ORGANIZATION_ROLE
                 ),
             ),
-        )
+        ),
     ]
 
 
@@ -126,6 +128,7 @@ class RetrieveDeleteOrganizationRoleUserView(RetrieveDestroyAPIView):
     queryset = OrganizationRoleUser.objects.all()
     organization_field = "organization_role__organization"
     permission_classes = [
+        IsAuthenticated,
         PermissionCondition.Or(
             PermissionCondition.And(
                 is_method(SAFE_METHODS),
@@ -139,5 +142,5 @@ class RetrieveDeleteOrganizationRoleUserView(RetrieveDestroyAPIView):
                     OrganizationPermission.REMOVE_ORGANIZATION_MEMBER
                 ),
             ),
-        )
+        ),
     ]
