@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-from kombu import Exchange, Queue
+SERVICE_NAME = "auth"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -162,19 +162,21 @@ TENANT_DOMAIN_MODEL = "organization.Domain"
 
 # Celery
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_TASK_QUEUES = (
-    Queue(
-        "auth_new_organization",
-        exchange=Exchange("new_organization", type="fanout"),
-        routing_key="new_organization",
-    ),
-)
-CELERY_TASK_ROUTES = {
-    "spacedf.tasks.new_organization": {
-        "queue": "auth_new_organization",
-        "routing_key": "new_organization",
-    }
-}
+CELERY_APP = "auth_service.celery.app"
+SYNCHRONOUS_MODEL = [
+    "organizationuser",
+    "organizationpolicy",
+    "organizationrole",
+    "organizationroleuser",
+    "spacepolicy",
+    "spacerole",
+    "spaceroleuser",
+]
+CLONE_MODELS = ["space"]
+CELERY_TASKS = [
+    "common.apps.organization",
+    "common.apps.space",
+]
 
 NEW_ORGANIZATION_HANDLER = (
     "common.apps.organization_role.handlers.NewOrganizationHandler"
