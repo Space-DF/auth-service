@@ -32,6 +32,7 @@ SHARED_APPS = [
     "drf_yasg",
     "common.apps.organization",
     "common.apps.jwks",
+    "common.apps.celery_autoreload",
 ]
 
 TENANT_APPS = [
