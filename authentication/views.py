@@ -1,4 +1,5 @@
 from authentication.serializers import RegistrationSerializer
+from common.apps.refresh_tokens.services import create_refresh_token
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -12,9 +13,15 @@ class RegistrationAPIView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            refresh_token, access_token = create_refresh_token(user)
             return Response(
-                {"Message": "User created successfully", "User": serializer.data},
+                {
+                    "message": "User created successfully",
+                    "user": serializer.data,
+                    "refresh": str(refresh_token),
+                    "access": str(access_token),
+                },
                 status=status.HTTP_201_CREATED,
             )
 

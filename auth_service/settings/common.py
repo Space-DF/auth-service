@@ -39,7 +39,7 @@ TENANT_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "authentication",
-    "refresh_tokens",
+    "common.apps.refresh_tokens",
     "common.apps.organization_user",
     "common.apps.organization_role",
     "common.apps.space",

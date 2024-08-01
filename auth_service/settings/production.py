@@ -54,15 +54,16 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
-    "AUTH_TOKEN_CLASSES": ("refresh_tokens.jwts.CustomAccessToken",),
+    "AUTH_TOKEN_CLASSES": ("common.apps.refresh_tokens.jwts.CustomAccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
     "JTI_CLAIM": "jti",
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(hours=1),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),
-    "TOKEN_REFRESH_SERIALIZER": "refresh_tokens.serializers.CustomTokenRefreshSerializer",
-    "TOKEN_OBTAIN_SERIALIZER": "refresh_tokens.serializers.CustomTokenObtainPairSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "common.apps.refresh_tokens.serializers.CustomTokenRefreshSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "common.apps.refresh_tokens.serializers.CustomTokenObtainPairSerializer",
 }
+REFRESH_TOKEN_CLASS = "common.apps.refresh_tokens.jwts.CustomRefreshToken"  # nosec B105
 
 # Celery
 CELERY_BROKER_URL = os.getenv(  # noqa
