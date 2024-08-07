@@ -58,6 +58,7 @@ urlpatterns = [
     # apis
     path("api/", include("authentication.urls")),
     path("api/", include("organization_role.urls")),
+    path("api/", include("space.urls")),
     path("api/", include("space_role.urls")),
     # well-known
     path("api/", include("common.apps.jwks.urls")),

@@ -171,14 +171,13 @@ SYNCHRONOUS_MODEL = [
     "organizationpolicy",
     "organizationrole",
     "organizationroleuser",
+    "space",
     "spacepolicy",
     "spacerole",
     "spaceroleuser",
 ]
-CLONE_MODELS = ["space"]
 CELERY_TASKS = [
     "common.apps.organization",
-    "common.apps.space",
 ]
 
 NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
