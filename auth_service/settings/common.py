@@ -123,7 +123,7 @@ USE_TZ = True
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATIC_URL = "/static/"
+STATIC_URL = "/auth/static/"
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "<app_name>/static"),
