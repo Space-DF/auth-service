@@ -15,10 +15,13 @@ Including another URLconf
 """
 
 from common.swagger.views import get_tenant_schema_view
-from django.contrib import admin
+from django.db import connection
+from django.http import HttpResponse
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from rest_framework import permissions
+
+from .celery import app as celery_app
 
 schema_view = get_tenant_schema_view(
     openapi.Info(
@@ -34,6 +37,12 @@ schema_view = get_tenant_schema_view(
 )
 
 
+def health_check(_):
+    if not connection.ensure_connection() and celery_app.control.inspect().active():
+        return HttpResponse("OK")
+    return HttpResponse(status=500)
+
+
 urlpatterns = [
     # docs
     re_path(
@@ -41,11 +50,8 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    # admin
-    path("auth/admin/", admin.site.urls),
-    # apis
-    path("auth/api/", include("authentication.urls")),
-    path("auth/api/", include("organization_role.urls")),
-    path("auth/api/", include("space.urls")),
-    path("auth/api/", include("space_role.urls")),
+    # health
+    path("auth/api/health", health_check),
+    # well-known
+    path("auth/api/", include("common.apps.jwks.urls")),
 ]
