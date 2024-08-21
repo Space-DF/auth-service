@@ -69,3 +69,13 @@ REFRESH_TOKEN_CLASS = "common.apps.refresh_tokens.jwts.CustomRefreshToken"  # no
 CELERY_BROKER_URL = os.getenv(  # noqa
     "CELERY_BROKER_URL", "amqp://guest:guest@localhost"
 )
+
+OAUTH_CLIENTS = {
+    "GOOGLE": {
+        "TOKEN_URL": "https://oauth2.googleapis.com/token",  # noqa
+        "INFO_URL": "https://www.googleapis.com/oauth2/v3/userinfo",  # noqa
+        "CALLBACK_URL": os.getenv("GOOGLE_CALLBACK_URL", ""),  # noqa
+        "CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID", ""),  # noqa
+        "CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", ""),  # noqa
+    }
+}

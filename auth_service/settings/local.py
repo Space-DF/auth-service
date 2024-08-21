@@ -73,3 +73,18 @@ REFRESH_TOKEN_CLASS = "common.apps.refresh_tokens.jwts.CustomRefreshToken"  # no
 
 # Celery
 CELERY_BROKER_URL = "amqp://guest:guest@localhost"
+
+OAUTH_CLIENTS = {
+    "GOOGLE": {
+        "TOKEN_URL": "https://oauth2.googleapis.com/token",
+        "INFO_URL": "https://www.googleapis.com/oauth2/v3/userinfo",
+        "CALLBACK_URL": os.getenv("GOOLE_CALLBACK_URL", "http://localhost"),  # noqa
+        "CLIENT_ID": os.getenv(  # noqa
+            "GOOGLE_CLIENT_ID",
+            "785199163527-gsmd6erevavb198bi6k1nec34dm9epve.apps.googleusercontent.com",
+        ),  # noqa
+        "CLIENT_SECRET": os.getenv(  # noqa
+            "GOOGLE_CLIENT_SECRET", "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"
+        ),  # noqa
+    }
+}
