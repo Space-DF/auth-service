@@ -20,15 +20,15 @@ ARG GOOGLE_CLIENT_SECRET
 
 # Allows docker to cache installed dependencies between builds
 RUN apk add build-base libffi-dev
-COPY ./auth_service/requirements.txt requirements.txt
+COPY ./auth-service/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-COPY ./pkg pkg
-RUN pip install ../pkg
+COPY ./django-common-utils django-common-utils
+RUN pip install ../django-common-utils
 
 # Adds our application code to the image
-COPY ./auth_service auth_service
+COPY ./auth-service auth-service
 
-WORKDIR /auth_service
+WORKDIR /auth-service
 
 EXPOSE 80
 
