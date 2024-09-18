@@ -79,3 +79,5 @@ OAUTH_CLIENTS = {
         "CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", ""),  # noqa
     }
 }
+
+CONSOLE_SERVICE_URL = os.getenv("CONSOLE_SERVICE_URL", "")  # noqa

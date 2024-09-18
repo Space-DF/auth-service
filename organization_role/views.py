@@ -11,11 +11,6 @@ from common.permissions.permission_classes import (
     is_method,
 )
 from common.permissions.permission_condition import PermissionCondition
-from organization_role.serializers import (
-    OrganizationPolicySerializer,
-    OrganizationRoleSerializer,
-    OrganizationRoleUserSerializer,
-)
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import (
     ListAPIView,
@@ -25,6 +20,12 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+
+from organization_role.serializers import (
+    OrganizationPolicySerializer,
+    OrganizationRoleSerializer,
+    OrganizationRoleUserSerializer,
+)
 
 
 class ListCreateOrganizationRoleView(ListCreateAPIView):

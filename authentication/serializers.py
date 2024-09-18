@@ -19,3 +19,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return OrganizationUser.objects.create_user(**validated_data)
+
+
+class SpaceDFConsoleLoginSerializer(serializers.Serializer):
+    code_verifier = serializers.CharField()
+    code = serializers.CharField()
+    client_id = serializers.CharField()
