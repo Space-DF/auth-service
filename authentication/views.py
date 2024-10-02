@@ -1,8 +1,9 @@
-from authentication.serializers import RegistrationSerializer
 from common.apps.refresh_tokens.services import create_refresh_token
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from authentication.serializers import RegistrationSerializer
 
 
 class RegistrationAPIView(generics.GenericAPIView):

@@ -88,3 +88,5 @@ OAUTH_CLIENTS = {
         ),  # noqa
     }
 }
+
+CONSOLE_SERVICE_URL = ""

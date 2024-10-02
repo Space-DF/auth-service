@@ -40,10 +40,16 @@ TENANT_APPS = [
     "django.contrib.auth",
     "authentication",
     "common.apps.refresh_tokens",
+    "oauth_credentials",
     "common.apps.organization_user",
     "common.apps.organization_role",
     "common.apps.space",
     "common.apps.space_role",
+    "allauth.account",
+    "allauth",
+    "allauth.headless",
+    "spacedf_provider",
+    "allauth.socialaccount",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -60,6 +66,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "common.middlewares.query_alert_middleware.QueryAlertMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "auth_service.urls"
@@ -181,9 +188,27 @@ SYNCHRONOUS_MODEL = [
 ]
 CELERY_TASKS = [
     "common.apps.organization",
+    "oauth_credentials",
 ]
 
 NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
 
 # Middlewares
 PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]
+
+CELERY_RESULT_BACKEND = "rpc://"
+
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+HEADLESS_ONLY = True
+SOCIALACCOUNT_ENABLED = True
+
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": "http://localhost:5173",
+    "account_reset_password_from_key": "http://localhost:5173",
+    "account_signup": "http://localhost:5173",
+    "socialaccount_login_error": "http://localhost:3000",
+}
