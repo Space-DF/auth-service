@@ -48,4 +48,5 @@ urlpatterns = [
     path("auth/api/", include("organization_role.urls")),
     path("auth/api/", include("space.urls")),
     path("auth/api/", include("space_role.urls")),
+    path("auth/api/", include("oauth_credentials.urls")),
 ]

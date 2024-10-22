@@ -81,3 +81,4 @@ OAUTH_CLIENTS = {
 }
 
 CONSOLE_SERVICE_URL = os.getenv("CONSOLE_SERVICE_URL", "")  # noqa
+ROOT_API_KEY = os.getenv("ROOT_API_KEY", "")  # noqa
