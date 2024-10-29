@@ -5,6 +5,7 @@ from allauth.socialaccount.models import EmailAddress, SocialApp
 from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
 from common.apps.refresh_tokens.services import create_refresh_token
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from requests import HTTPError
 from rest_framework import generics, permissions, response, status
@@ -15,6 +16,7 @@ from authentication.serializers import SpaceDFConsoleLoginSerializer
 logger = logging.getLogger(__name__)
 
 SPACE_DF_TOKEN_URL = f"{settings.CONSOLE_SERVICE_URL}/oauth2/token"
+User = get_user_model()
 
 
 class SpaceDFAdapter(OAuth2Adapter):
@@ -54,7 +56,7 @@ class SpaceDFAdapter(OAuth2Adapter):
         existing_user = None
         if email:
             try:
-                existing_user = EmailAddress.objects.get(email=email).user
+                existing_user = User.objects.get(email=email)
             except EmailAddress.DoesNotExist:
                 pass
 
@@ -90,7 +92,7 @@ class SpaceDFConsoleLoginView(generics.GenericAPIView):
 
         user = self.adapter.save_user(request, login)
 
-        refresh, access = create_refresh_token(user)
+        refresh, access = create_refresh_token(user, issuer=request.tenant)
 
         return response.Response(
             {"refresh": str(refresh), "access": str(access)},
