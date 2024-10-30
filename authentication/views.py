@@ -1,7 +1,11 @@
+from common.apps.refresh_tokens.serializers import TokenPairSerializer
 from common.apps.refresh_tokens.services import create_refresh_token
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from authentication.serializers import RegistrationSerializer
 
@@ -9,12 +13,15 @@ from authentication.serializers import RegistrationSerializer
 class RegistrationAPIView(generics.GenericAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            refresh_token, access_token = create_refresh_token(user, issuer=request.tenant)
+            refresh_token, access_token = create_refresh_token(
+                user, issuer=request.tenant
+            )
             return Response(
                 {
                     "message": "User created successfully",
@@ -26,3 +33,17 @@ class RegistrationAPIView(generics.GenericAPIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomRefreshTokenAPIView(TokenRefreshView):
+    authentication_classes = []
+
+
+class LoginAPIView(TokenObtainPairView):
+    authentication_classes = []
+
+    @swagger_auto_schema(
+        responses={status.HTTP_201_CREATED: TokenPairSerializer},
+    )
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        return super().post(request, *args, **kwargs)
