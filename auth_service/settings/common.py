@@ -42,7 +42,6 @@ TENANT_APPS = [
     "common.apps.refresh_tokens",
     "oauth_credentials",
     "common.apps.organization_user",
-    "common.apps.organization_role",
     "common.apps.space",
     "common.apps.space_role",
     "allauth.account",

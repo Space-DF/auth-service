@@ -1,5 +1,5 @@
 from allauth.socialaccount.models import SocialApp
-from common.permissions.permission_classes import HasRootAPIKey
+from common.permissions.permission_classes import HasAPIKey
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import renderers, status
 from rest_framework.generics import RetrieveAPIView
@@ -10,7 +10,7 @@ from oauth_credentials.serializers import OAuthCredentialsSerializer
 class RetriveOauthCredentialsView(RetrieveAPIView):
     serializer_class = OAuthCredentialsSerializer
     queryset = SocialApp.objects.all()
-    permission_classes = [HasRootAPIKey]
+    permission_classes = [HasAPIKey]
     renderer_classes = [renderers.JSONRenderer]
 
     def get_object(self):
