@@ -1,4 +1,3 @@
-from common.apps.refresh_tokens.serializers import TokenPairSerializer
 from common.apps.refresh_tokens.services import create_refresh_token
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
@@ -7,7 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from authentication.serializers import RegistrationSerializer
+from authentication.serializers import AuthTokenPairSerializer, RegistrationSerializer
 
 
 class RegistrationAPIView(generics.GenericAPIView):
@@ -28,6 +27,7 @@ class RegistrationAPIView(generics.GenericAPIView):
                     "user": serializer.data,
                     "refresh": str(refresh_token),
                     "access": str(access_token),
+                    "default_space": f"default-{user.id}",
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -43,7 +43,7 @@ class LoginAPIView(TokenObtainPairView):
     authentication_classes = []
 
     @swagger_auto_schema(
-        responses={status.HTTP_201_CREATED: TokenPairSerializer},
+        responses={status.HTTP_201_CREATED: AuthTokenPairSerializer},
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         return super().post(request, *args, **kwargs)

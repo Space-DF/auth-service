@@ -86,10 +86,9 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
 @receiver(post_save, sender=OrganizationUser)
 def create_default_space(sender, instance, created, **kwargs):
-    if created and instance.is_owner:
-        if not Space.objects.exists():
-            Space(
-                name="Default",
-                slug_name="default",
-                created_by=instance,
-            ).save()
+    if created:
+        Space(
+            name="Default",
+            slug_name=f"default-{instance.id}",
+            created_by=instance,
+        ).save()
