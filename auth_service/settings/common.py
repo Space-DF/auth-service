@@ -189,6 +189,7 @@ SYNCHRONOUS_MODEL = [
 CELERY_TASKS = [
     "common.apps.organization",
     "oauth_credentials",
+    "space",
 ]
 
 NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
