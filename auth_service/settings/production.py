@@ -82,3 +82,14 @@ OAUTH_CLIENTS = {
 
 CONSOLE_SERVICE_URL = os.getenv("CONSOLE_SERVICE_URL", "")  # noqa
 ROOT_API_KEY = os.getenv("ROOT_API_KEY", "")  # noqa
+
+
+# TODO: apply allauth for google login
+# TODO: subdomain problem
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+
+HEADLESS_ONLY = True
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
