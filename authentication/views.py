@@ -1,4 +1,5 @@
-from common.apps.refresh_tokens.services import create_refresh_token
+from common.permissions.permission_classes import HasSpaceName
+from common.swagger.params import get_space_header_params
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
@@ -7,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from authentication.serializers import AuthTokenPairSerializer, RegistrationSerializer
+from authentication.services import create_space_access_token, create_space_jwt_tokens
 
 
 class RegistrationAPIView(generics.GenericAPIView):
@@ -18,8 +20,9 @@ class RegistrationAPIView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            refresh_token, access_token = create_refresh_token(
-                user, issuer=request.tenant
+            default_space_slug = f"default-{user.id}"
+            refresh_token, access_token = create_space_jwt_tokens(
+                user, space_slug=default_space_slug, issuer=request.tenant
             )
             return Response(
                 {
@@ -27,7 +30,7 @@ class RegistrationAPIView(generics.GenericAPIView):
                     "user": serializer.data,
                     "refresh": str(refresh_token),
                     "access": str(access_token),
-                    "default_space": f"default-{user.id}",
+                    "default_space": default_space_slug,
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -36,7 +39,15 @@ class RegistrationAPIView(generics.GenericAPIView):
 
 
 class CustomRefreshTokenAPIView(TokenRefreshView):
-    authentication_classes = []
+    authentication_classes = [HasSpaceName]
+
+    @swagger_auto_schema(manual_parameters=get_space_header_params())
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        return {**context, "access_token_handler": create_space_access_token}
 
 
 class LoginAPIView(TokenObtainPairView):

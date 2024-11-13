@@ -6,6 +6,8 @@ from common.apps.refresh_tokens.serializers import (
 from common.errors.errors import ExistedEmailError
 from rest_framework import serializers
 
+from authentication.services import create_space_jwt_tokens
+
 
 class RegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
@@ -53,13 +55,27 @@ class SpaceDFConsoleLoginSerializer(serializers.Serializer):
 
 
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
+    def get_tokens(self):
+        tenant = None
+        if hasattr(self.context["request"], "tenant"):
+            tenant = self.context["request"].tenant
 
         default_space = self.user.created_space.first()
-        data["default_space"] = default_space.slug_name if default_space else None
+        default_space_slug = default_space.slug_name if default_space else None
+        refresh_token, access_token = create_space_jwt_tokens(
+            self.user, space_slug=default_space_slug, issuer=tenant
+        )
 
-        return data
+        return refresh_token, access_token, default_space_slug
+
+    def get_response_data(self):
+        refresh_token, access_token, default_space = self.get_tokens()
+
+        return {
+            "refresh": str(refresh_token),
+            "access": str(access_token),
+            "default_space": default_space,
+        }
 
 
 class AuthTokenPairSerializer(TokenPairSerializer):

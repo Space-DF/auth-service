@@ -3,7 +3,7 @@ import logging
 import requests
 from allauth.socialaccount.models import EmailAddress, SocialApp
 from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
-from common.apps.refresh_tokens.services import create_refresh_token
+from common.apps.refresh_tokens.services import create_jwt_tokens
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
@@ -92,7 +92,7 @@ class SpaceDFConsoleLoginView(generics.GenericAPIView):
 
         user = self.adapter.save_user(request, login)
 
-        refresh, access = create_refresh_token(user, issuer=request.tenant)
+        refresh, access = create_jwt_tokens(user, issuer=request.tenant)
 
         return response.Response(
             {"refresh": str(refresh), "access": str(access)},
