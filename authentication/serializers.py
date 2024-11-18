@@ -30,7 +30,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "This field must contain at least 1 digit."
             )
-        if not any(char.isalnum() for char in value):
+        if all(char.isalnum() for char in value):
             raise serializers.ValidationError(
                 "This field must contain at least 1 special letter"
             )
