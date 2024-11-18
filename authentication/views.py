@@ -39,7 +39,8 @@ class RegistrationAPIView(generics.GenericAPIView):
 
 
 class CustomRefreshTokenAPIView(TokenRefreshView):
-    authentication_classes = [HasSpaceName]
+    permission_classes = [HasSpaceName]
+    authentication_classes = []
 
     @swagger_auto_schema(manual_parameters=get_space_header_params())
     def post(self, request, *args, **kwargs):
@@ -47,7 +48,14 @@ class CustomRefreshTokenAPIView(TokenRefreshView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        return {**context, "access_token_handler": create_space_access_token}
+        params = {
+            "space_slug_name": self.request.headers.get("X-Space"),
+        }
+        return {
+            **context,
+            "access_token_handler": create_space_access_token,
+            "access_token_handler_params": params,
+        }
 
 
 class LoginAPIView(TokenObtainPairView):

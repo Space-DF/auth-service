@@ -13,6 +13,7 @@ urlpatterns = [
     path(
         "auth/refresh-token", CustomRefreshTokenAPIView.as_view(), name="refresh_token"
     ),
+    path("auth/spaces/switch", CustomRefreshTokenAPIView.as_view(), name="space_token"),
     path("auth/oauth2/google", GoogleLoginView.as_view(), name="oauth2_google"),
     path("auth/oauth2/", include("spacedf_provider.urls")),
 ]
