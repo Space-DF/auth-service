@@ -21,7 +21,7 @@ ARG CONSOLE_SERVICE_URL
 ARG ROOT_API_KEY
 
 # Allows docker to cache installed dependencies between builds
-RUN apk add build-base libffi-dev
+RUN apk add build-base libffi-dev curl
 COPY ./auth-service/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY ./django-common-utils django-common-utils
