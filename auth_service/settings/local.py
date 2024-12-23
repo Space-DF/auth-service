@@ -64,8 +64,8 @@ SIMPLE_JWT = {
     "TOKEN_TYPE_CLAIM": "token_type",
     "JTI_CLAIM": "jti",
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(hours=1),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=10),
     "TOKEN_REFRESH_SERIALIZER": "common.apps.refresh_tokens.serializers.CustomTokenRefreshSerializer",
     "TOKEN_OBTAIN_SERIALIZER": "authentication.serializers.TokenObtainPairSerializer",
 }
