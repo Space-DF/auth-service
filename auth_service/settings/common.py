@@ -38,16 +38,16 @@ SHARED_APPS = [
 TENANT_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
-    "authentication",
+    "apps.authentication",
     "common.apps.refresh_tokens",
-    "oauth_credentials",
+    "apps.oauth_credentials",
     "common.apps.organization_user",
     "common.apps.space",
     "common.apps.space_role",
     "allauth.account",
     "allauth",
     "allauth.headless",
-    "spacedf_provider",
+    "apps.spacedf_provider",
     "allauth.socialaccount",
 ]
 
@@ -188,11 +188,11 @@ SYNCHRONOUS_MODEL = [
 ]
 CELERY_TASKS = [
     "common.apps.organization",
-    "oauth_credentials",
-    "space",
+    "apps.oauth_credentials",
+    "apps.space",
 ]
 
-NEW_ORGANIZATION_HANDLER = "organization_role.handlers.NewOrganizationHandler"
+NEW_ORGANIZATION_HANDLER = "apps.organization_role.handlers.NewOrganizationHandler"
 
 # Middlewares
 PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]

@@ -67,7 +67,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=10),
     "TOKEN_REFRESH_SERIALIZER": "common.apps.refresh_tokens.serializers.CustomTokenRefreshSerializer",
-    "TOKEN_OBTAIN_SERIALIZER": "authentication.serializers.TokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "apps.authentication.serializers.TokenObtainPairSerializer",
 }
 REFRESH_TOKEN_CLASS = "common.apps.refresh_tokens.jwts.CustomRefreshToken"  # nosec B105
 

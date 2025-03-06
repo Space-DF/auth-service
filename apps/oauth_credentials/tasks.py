@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.utils import ProgrammingError
 from django_tenants.utils import schema_context
 
-from spacedf_provider.provider import SpaceDFProvider
+from apps.spacedf_provider.provider import SpaceDFProvider
 
 
 @task(

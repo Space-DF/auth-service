@@ -11,7 +11,7 @@ from requests import HTTPError
 from rest_framework import generics, permissions, response, status
 from rest_framework.exceptions import ParseError
 
-from authentication.serializers import SpaceDFConsoleLoginSerializer
+from apps.authentication.serializers import SpaceDFConsoleLoginSerializer
 
 logger = logging.getLogger(__name__)
 

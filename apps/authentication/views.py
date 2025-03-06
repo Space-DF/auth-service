@@ -7,8 +7,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from authentication.serializers import AuthTokenPairSerializer, RegistrationSerializer
-from authentication.services import create_space_access_token, create_space_jwt_tokens
+from apps.authentication.serializers import AuthTokenPairSerializer, RegistrationSerializer
+from apps.authentication.services import create_space_access_token, create_space_jwt_tokens
 
 
 class RegistrationAPIView(generics.GenericAPIView):

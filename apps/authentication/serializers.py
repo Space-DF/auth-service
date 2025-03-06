@@ -6,7 +6,7 @@ from common.apps.refresh_tokens.serializers import (
 from common.errors.errors import ExistedEmailError
 from rest_framework import serializers
 
-from authentication.services import create_space_jwt_tokens
+from apps.authentication.services import create_space_jwt_tokens
 
 
 class RegistrationSerializer(serializers.ModelSerializer):

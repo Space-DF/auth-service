@@ -15,7 +15,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 
-from space.serializers import SpaceSerializer
+from apps.space.serializers import SpaceSerializer
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):

@@ -18,12 +18,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 
-from space_role.serializers import (
+from apps.space_role.serializers import (
     SpacePolicySerializer,
     SpaceRoleSerializer,
     SpaceRoleUserSerializer,
 )
-from space_role.services import create_space_default_role
+from apps.space_role.services import create_space_default_role
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
