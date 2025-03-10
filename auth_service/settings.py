@@ -11,15 +11,21 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
+# Basic settings
 SERVICE_NAME = "auth"
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-*$0b8ibx7uzk45cm+fxw7*jj(yzi2ye!l4+!dnyxa-u-nbuz=q"
+)  # noqa
+DEBUG = os.getenv("ENV", default="dev") == "dev"  # noqa
+ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS", "*")]  # noqa
+HOST = os.getenv("HOST", "http://localhost:8000/")  # noqa
+DEFAULT_TENANT_HOST = os.getenv("DEFAULT_TENANT_HOST", "localhost")  # noqa
 
 # Application definition
-
 SHARED_APPS = [
     "django_tenants",
     "django.contrib.contenttypes",
@@ -90,58 +96,47 @@ WSGI_APPLICATION = "auth_service.wsgi.application"
 
 DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 
+# Database configuration
+DATABASES = {
+    "default": {
+        "ENGINE": "django_tenants.postgresql_backend",
+        "NAME": os.getenv("DB_NAME", "spacedf_auth_service"),  # noqa
+        "USER": os.getenv("DB_USERNAME", "postgres"),  # noqa
+        "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),  # noqa
+        "HOST": os.getenv("DB_HOST", "localhost"),  # noqa
+        "PORT": os.getenv("DB_PORT", 5432),  # noqa
+    }
+}
 
 # Password validation
-# https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/3.2/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
-
+# Static files
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
 STATIC_URL = "/auth/static/"
-
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "<app_name>/static"),
     os.path.join(BASE_DIR, "static"),
 )
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Rest framework option
+# Rest framework configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -149,42 +144,39 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "common.errors.exception_handler.custom_exception_handler",
 }
 
-# auth config
+# Authentication configuration
 AUTH_USER_MODEL = "organization_user.OrganizationUser"
-
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
 
-# Docs
+# Swagger settings
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
-        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+        "User ID": {"type": "apiKey", "name": "X-User-ID", "in": "header"},
+        "Space": {"type": "apiKey", "name": "X-Space", "in": "header"},
+        "API Key": {"type": "apiKey", "name": "X-API-key", "in": "header"},
     },
-    "DEFAULT_AUTO_SCHEMA_CLASS": "common.swagger.params.CustomSwaggerAutoSchema",
 }
 
-# Multi-tenants
+# Multi-tenants configuration
 TENANT_MODEL = "organization.Organization"
 TENANT_DOMAIN_MODEL = "organization.Domain"
 SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
 PUBLIC_SCHEMA_URLCONF = "auth_service.urls_public"
 
-# Celery
+# Celery configuration
+CELERY_BROKER_URL = os.getenv(
+    "CELERY_BROKER_URL", "amqp://guest:guest@localhost"
+)  # noqa
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_ACKS_LATE = True
 CELERYD_PREFETCH_MULTIPLIER = 1
 CELERY_APP = "auth_service.celery.app"
+CELERY_RESULT_BACKEND = "rpc://"
 SYNCHRONOUS_MODEL = [
-    "organizationuser",
-    "organizationpolicy",
-    "organizationrole",
-    "organizationroleuser",
     "space",
-    "spacepolicy",
-    "spacerole",
-    "spaceroleuser",
 ]
 CELERY_TASKS = [
     "common.apps.organization",
@@ -197,19 +189,77 @@ NEW_ORGANIZATION_HANDLER = "apps.organization_role.handlers.NewOrganizationHandl
 # Middlewares
 PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]
 
-CELERY_RESULT_BACKEND = "rpc://"
-
-
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
+
+# Headless configuration
 HEADLESS_ONLY = True
 SOCIALACCOUNT_ENABLED = True
-
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": "http://localhost:5173",
     "account_reset_password_from_key": "http://localhost:5173",
     "account_signup": "http://localhost:5173",
     "socialaccount_login_error": "http://localhost:3000",
 }
+
+# CORS configuration
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+    ","
+)  # noqa
+
+# JWT configuration
+JWT_PRIVATE_KEY = os.getenv("JWT_PRIVATE_KEY")  # noqa
+JWT_PUBLIC_KEY = os.getenv("JWT_PUBLIC_KEY")  # noqa
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": JWT_PRIVATE_KEY,
+    "VERIFYING_KEY": JWT_PUBLIC_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("common.apps.refresh_tokens.jwts.CustomAccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=7),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=10),
+    "TOKEN_REFRESH_SERIALIZER": "common.apps.refresh_tokens.serializers.CustomTokenRefreshSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "apps.authentication.serializers.TokenObtainPairSerializer",
+}
+REFRESH_TOKEN_CLASS = "common.apps.refresh_tokens.jwts.CustomRefreshToken"  # nosec B105
+
+# OAuth clients configuration
+OAUTH_CLIENTS = {
+    "GOOGLE": {
+        "TOKEN_URL": "https://oauth2.googleapis.com/token",  # noqa
+        "INFO_URL": "https://www.googleapis.com/oauth2/v3/userinfo",  # noqa
+        "CALLBACK_URL": os.getenv("GOOGLE_CALLBACK_URL", ""),  # noqa
+        "CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID", ""),  # noqa
+        "CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET", ""),  # noqa
+    }
+}
+
+# Console service configuration
+CONSOLE_SERVICE_URL = os.getenv("CONSOLE_SERVICE_URL", "")  # noqa
+ROOT_API_KEY = os.getenv("ROOT_API_KEY", "")  # noqa
+
+# Security settings
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SECURE = True
+
+# Account settings
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+# TODOs
+# TODO: apply allauth for google login
+# TODO: subdomain problem

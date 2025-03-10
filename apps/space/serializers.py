@@ -8,6 +8,8 @@ class SpaceSerializer(serializers.ModelSerializer):
         fields = "__all__"
         extra_kwargs = {
             "id": {"read_only": True},
+            "total_devices": {"read_only": True},
+            "is_active": {"read_only": True},
             "created_by": {"read_only": True},
             "created_at": {"read_only": True},
             "updated_at": {"read_only": True},

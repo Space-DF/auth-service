@@ -3,6 +3,7 @@ from common.apps.refresh_tokens.serializers import (
     BaseTokenObtainPairSerializer,
     TokenPairSerializer,
 )
+from common.apps.space.models import Space
 from common.errors.errors import ExistedEmailError
 from rest_framework import serializers
 
@@ -75,7 +76,7 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         if hasattr(self.context["request"], "tenant"):
             tenant = self.context["request"].tenant
 
-        default_space = self.user.created_space.first()
+        default_space = Space.objects.filter(created_by=self.user.id).first()
         default_space_slug = default_space.slug_name if default_space else None
         refresh_token, access_token = create_space_jwt_tokens(
             self.user, space_slug=default_space_slug, issuer=tenant

@@ -82,5 +82,5 @@ def handle_new_space(sender, instance, created, **kwargs):
     if created:
         owner_role, _ = create_space_default_role(instance)
         SpaceRoleUser(
-            organization_user=instance.created_by, space_role=owner_role
+            organization_user_id=instance.created_by, space_role=owner_role
         ).save()
