@@ -6,8 +6,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from apps.authentication.serializers import AuthTokenPairSerializer, RegistrationSerializer
-from apps.authentication.services import create_space_access_token, create_space_jwt_tokens
+from apps.authentication.serializers import (
+    AuthTokenPairSerializer,
+    RegistrationSerializer,
+)
+from apps.authentication.services import (
+    create_space_access_token,
+    create_space_jwt_tokens,
+)
 
 
 class RegistrationAPIView(generics.GenericAPIView):
@@ -48,8 +54,11 @@ class CustomRefreshTokenAPIView(TokenRefreshView):
         context = super().get_serializer_context()
         space_slug = self.request.headers.get("X-Space")
         if not space_slug:
-            return Response({"detail": "X-Space header is required."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"detail": "X-Space header is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         params = {
             "space_slug_name": space_slug,
         }
