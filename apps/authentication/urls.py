@@ -1,7 +1,7 @@
 from common.apps.oauth2.views import GoogleLoginView
 from django.urls import include, path
 
-from authentication.views import (
+from apps.authentication.views import (
     CustomRefreshTokenAPIView,
     LoginAPIView,
     RegistrationAPIView,
@@ -15,5 +15,5 @@ urlpatterns = [
     ),
     path("auth/spaces/switch", CustomRefreshTokenAPIView.as_view(), name="space_token"),
     path("auth/oauth2/google", GoogleLoginView.as_view(), name="oauth2_google"),
-    path("auth/oauth2/", include("spacedf_provider.urls")),
+    path("auth/oauth2/", include("apps.spacedf_provider.urls")),
 ]

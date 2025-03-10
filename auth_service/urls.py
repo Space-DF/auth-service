@@ -44,8 +44,8 @@ urlpatterns = [
     # admin
     path("auth/admin/", admin.site.urls),
     # apis
-    path("auth/api/", include("authentication.urls")),
-    path("auth/api/", include("space.urls")),
-    path("auth/api/", include("space_role.urls")),
-    path("auth/api/", include("oauth_credentials.urls")),
+    path("auth/api/", include("apps.authentication.urls")),
+    path("auth/api/", include("apps.space.urls")),
+    path("auth/api/", include("apps.space_role.urls")),
+    path("auth/api/", include("apps.oauth_credentials.urls")),
 ]

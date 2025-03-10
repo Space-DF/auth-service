@@ -34,7 +34,7 @@ WORKDIR /auth-service
 
 EXPOSE 80
 
-ENV DJANGO_SETTINGS_MODULE="auth_service.settings.production"
+ENV DJANGO_SETTINGS_MODULE="auth_service.settings"
 
 ENV ENV=${ENV}
 ENV SECRET_KEY=${SECRET_KEY}

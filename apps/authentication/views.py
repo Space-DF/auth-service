@@ -1,4 +1,3 @@
-from common.permissions.permission_classes import HasSpaceName
 from common.swagger.params import get_space_header_params
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
@@ -7,8 +6,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from authentication.serializers import AuthTokenPairSerializer, RegistrationSerializer
-from authentication.services import create_space_access_token, create_space_jwt_tokens
+from apps.authentication.serializers import (
+    AuthTokenPairSerializer,
+    RegistrationSerializer,
+)
+from apps.authentication.services import (
+    create_space_access_token,
+    create_space_jwt_tokens,
+)
 
 
 class RegistrationAPIView(generics.GenericAPIView):
@@ -39,7 +44,6 @@ class RegistrationAPIView(generics.GenericAPIView):
 
 
 class CustomRefreshTokenAPIView(TokenRefreshView):
-    permission_classes = [HasSpaceName]
     authentication_classes = []
 
     @swagger_auto_schema(manual_parameters=get_space_header_params())
@@ -48,8 +52,15 @@ class CustomRefreshTokenAPIView(TokenRefreshView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        space_slug = self.request.headers.get("X-Space")
+        if not space_slug:
+            return Response(
+                {"detail": "X-Space header is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         params = {
-            "space_slug_name": self.request.headers.get("X-Space"),
+            "space_slug_name": space_slug,
         }
         return {
             **context,

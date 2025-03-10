@@ -1,6 +1,6 @@
 from django.urls import path
 
-from oauth_credentials.views import RetriveOauthCredentialsView
+from apps.oauth_credentials.views import RetriveOauthCredentialsView
 
 app_name = "oauth-redentials"
 

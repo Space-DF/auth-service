@@ -1,6 +1,6 @@
 from django.urls import path
 
-from space.views import SpaceView
+from apps.space.views import SpaceView
 
 app_name = "space"
 

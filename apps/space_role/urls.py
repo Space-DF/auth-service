@@ -1,6 +1,6 @@
 from django.urls import path
 
-from space_role.views import (
+from apps.space_role.views import (
     ListCreateSpaceRoleView,
     ListSpacePolicyView,
     ListSpaceRoleUserView,
