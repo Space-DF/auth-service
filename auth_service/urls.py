@@ -15,7 +15,6 @@ Including another URLconf
 """
 
 from common.swagger.views import get_tenant_schema_view
-from django.contrib import admin
 from django.urls import include, path, re_path
 from drf_yasg import openapi
 from rest_framework import permissions
@@ -28,7 +27,7 @@ schema_view = get_tenant_schema_view(
         contact=openapi.Contact(email="contact@snippets.local"),
         license=openapi.License(name="BSD License"),
     ),
-    path="/auth/api/",
+    path="/api/",
     public=True,
     permission_classes=[permissions.AllowAny],
 )
@@ -41,11 +40,9 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    # admin
-    path("auth/admin/", admin.site.urls),
     # apis
-    path("auth/api/", include("apps.authentication.urls")),
-    path("auth/api/", include("apps.space.urls")),
-    path("auth/api/", include("apps.space_role.urls")),
-    path("auth/api/", include("apps.oauth_credentials.urls")),
+    path("api/", include("apps.authentication.urls")),
+    path("api/", include("apps.space.urls")),
+    path("api/", include("apps.space_role.urls")),
+    path("api/", include("apps.oauth_credentials.urls")),
 ]
