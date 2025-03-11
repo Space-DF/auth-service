@@ -1,14 +1,19 @@
 from common.swagger.params import get_space_header_params
+from common.utils.send_otp_email import send_otp_email
+from django.core.cache import cache
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.authentication.serializers import (
     AuthTokenPairSerializer,
     RegistrationSerializer,
+    SendOTPSerializer,
 )
 from apps.authentication.services import (
     create_space_access_token,
@@ -77,3 +82,23 @@ class LoginAPIView(TokenObtainPairView):
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         return super().post(request, *args, **kwargs)
+
+
+class SendOTPView(APIView):
+    """API View to send OTP for email verification"""
+
+    @swagger_auto_schema(
+        request_body=SendOTPSerializer,  # ✅ Specify request body schema
+        responses={200: openapi.Response("OTP sent successfully!")},
+    )
+    def post(self, request):
+        serializer = SendOTPSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+
+            otp_code = send_otp_email(email)
+            cache.set(f"otp_{email}", otp_code, timeout=600)  # Store OTP for 10 minutes
+
+            return Response({"message": "OTP sent successfully!"})
+
+        return Response(serializer.errors, status=400)

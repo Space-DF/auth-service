@@ -5,6 +5,7 @@ from apps.authentication.views import (
     CustomRefreshTokenAPIView,
     LoginAPIView,
     RegistrationAPIView,
+    SendOTPView,
 )
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path("auth/spaces/switch", CustomRefreshTokenAPIView.as_view(), name="space_token"),
     path("auth/oauth2/google", GoogleLoginView.as_view(), name="oauth2_google"),
     path("auth/oauth2/", include("apps.spacedf_provider.urls")),
+    path("auth/send-otp/", SendOTPView.as_view(), name="send_otp"),
 ]
