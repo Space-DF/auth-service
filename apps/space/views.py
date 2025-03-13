@@ -20,6 +20,12 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     ordering_fields = ["created_at"]
     search_fields = ["name"]
 
+    def get_object(self):
+        space_slug = self.request.headers.get("X-Space", None)
+        if not space_slug:
+            return None
+        return get_object_or_404(Space, slug_name=space_slug)
+
     def get_queryset(self):
         user_id = self.request.headers.get("X-User-ID", None)
         if not user_id:
