@@ -1,6 +1,7 @@
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.refresh_tokens.serializers import (
     BaseTokenObtainPairSerializer,
+    CustomTokenRefreshSerializer,
     TokenPairSerializer,
 )
 from common.apps.space.models import Space
@@ -96,3 +97,7 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
 
 class AuthTokenPairSerializer(TokenPairSerializer):
     default_space = serializers.CharField()
+
+
+class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
+    space = serializers.CharField(write_only=True, allow_null=True)
