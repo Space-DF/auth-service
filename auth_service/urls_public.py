@@ -54,4 +54,8 @@ urlpatterns = [
     path("api/health", health_check),
     # well-known
     path("api/", include("common.apps.jwks.urls")),
+    path("api/", include("apps.authentication.urls")),
+    path("api/", include("apps.space.urls")),
+    path("api/", include("apps.space_role.urls")),
+    path("api/", include("apps.oauth_credentials.urls")),
 ]
