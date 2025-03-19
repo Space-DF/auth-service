@@ -19,9 +19,13 @@ ARG GOOGLE_CLIENT_ID
 ARG GOOGLE_CLIENT_SECRET
 ARG CONSOLE_SERVICE_URL
 ARG ROOT_API_KEY
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY_ID
+ARG AWS_STORAGE_BUCKET_NAME
+ARG AWS_REGION
 
 # Allows docker to cache installed dependencies between builds
-RUN apk add build-base libffi-dev curl
+RUN apk add build-base libffi-dev curl zlib-dev jpeg-dev
 COPY ./auth-service/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY ./django-common-utils django-common-utils
@@ -54,6 +58,10 @@ ENV GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 ENV GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
 ENV CONSOLE_SERVICE_URL=${CONSOLE_SERVICE_URL}
 ENV ROOT_API_KEY=${ROOT_API_KEY}
+ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+ENV AWS_SECRET_ACCESS_KEY_ID=${AWS_SECRET_ACCESS_KEY_ID}
+ENV AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+ENV AWS_REGION=${AWS_REGION}
 
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]

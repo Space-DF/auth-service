@@ -8,6 +8,7 @@ from common.errors.errors import ExistedEmailError
 from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
+from auth_service.s3_service import S3Service
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -69,6 +70,39 @@ class SpaceDFConsoleLoginSerializer(serializers.Serializer):
     code = serializers.CharField()
     client_id = serializers.CharField()
 
+class ProfileSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    avatar = serializers.ImageField(required=False)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    location = serializers.CharField()
+    company_name = serializers.CharField()
+    title = serializers.CharField()
+    is_owner = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = OrganizationUser
+        fields = ("id", "first_name", "last_name", "email", "location", "avatar", "company_name", "title", "is_owner")
+
+    def update(self, instance, validated_data):
+        s3_service = S3Service()
+
+        avatar = validated_data.pop("avatar", None)
+        if avatar:
+            file_name = s3_service.upload_file(avatar)
+            instance.avatar = file_name
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.avatar:
+            data["avatar"] = S3Service().get_url(instance.avatar)
+        return data
 
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def get_tokens(self):
