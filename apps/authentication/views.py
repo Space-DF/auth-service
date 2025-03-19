@@ -51,20 +51,11 @@ class RegistrationAPIView(generics.GenericAPIView):
 
 class CustomRefreshTokenAPIView(TokenRefreshView):
     authentication_classes = []
-
-    @swagger_auto_schema(manual_parameters=get_space_header_params())
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+    _serializer_class = "apps.authentication.serializers.SpaceTokenRefreshSerializer"
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        space_slug = self.request.headers.get("X-Space")
-        if not space_slug:
-            return Response(
-                {"detail": "X-Space header is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        space_slug = self.request.data.get("space")
         params = {
             "space_slug_name": space_slug,
         }

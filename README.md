@@ -18,8 +18,8 @@
 ## Clone source code
 
 ```
-git clone git@github.com:Space-DF/auth-service.git
-git clone git@github.com:Space-DF/django-common-utils.git
+git clone -b dev git@github.com:Space-DF/auth-service.git
+git clone -b dev git@github.com:Space-DF/django-common-utils.git
 ```
 
 ## Setup
@@ -47,9 +47,8 @@ git clone git@github.com:Space-DF/django-common-utils.git
 
 - Create testing organization
   ```
-  python manage.py create_tenant
+  python manage.py create_organization
   ```
-  * Note: Domain or testing organization should be `<slug_name>.localhost`
 
 ## Run source code
 - Run server
@@ -58,6 +57,17 @@ git clone git@github.com:Space-DF/django-common-utils.git
   ```
 
 - The API documentation will be served on http://<testing organization slug name>.localhost:8000.
+
+## Migration
+When you make the change for the database model
+- Make migration file
+  ```
+  python manage.py makemigrations
+  ```
+- Migrate
+  ```
+  python manage.py migrate_schemas
+  ```
 
 ## About
 <a href="https://www.digitalfortress.dev/">
