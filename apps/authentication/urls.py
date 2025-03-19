@@ -3,8 +3,8 @@ from django.urls import include, path
 
 from apps.authentication.views import (
     CustomRefreshTokenAPIView,
-    LoginAPIView,
     EditProfileAPIView,
+    LoginAPIView,
     ProfileAPIView,
     RegistrationAPIView,
 )

@@ -1,6 +1,8 @@
-from django.conf import settings
-import boto3
 import uuid
+
+import boto3
+from django.conf import settings
+
 
 class S3Service:
     def __init__(self):

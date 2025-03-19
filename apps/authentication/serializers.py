@@ -71,6 +71,7 @@ class SpaceDFConsoleLoginSerializer(serializers.Serializer):
     code = serializers.CharField()
     client_id = serializers.CharField()
 
+
 class ProfileSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     email = serializers.EmailField(read_only=True)
@@ -84,7 +85,17 @@ class ProfileSerializer(serializers.Serializer):
 
     class Meta:
         model = OrganizationUser
-        fields = ("id", "first_name", "last_name", "email", "location", "avatar", "company_name", "title", "is_owner")
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "location",
+            "avatar",
+            "company_name",
+            "title",
+            "is_owner",
+        )
 
     def update(self, instance, validated_data):
         s3_service = S3Service()
@@ -98,12 +109,13 @@ class ProfileSerializer(serializers.Serializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.avatar:
             data["avatar"] = S3Service().get_url(instance.avatar)
         return data
+
 
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def get_tokens(self):

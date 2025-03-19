@@ -1,25 +1,22 @@
-from common.swagger.params import get_space_header_params
 from common.apps.organization_user.models import OrganizationUser
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, status, renderers
-from rest_framework.permissions import AllowAny
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from common.permissions.permission_classes import HasAPIKey
-from rest_framework.permissions import IsAuthenticated
-from auth_service.s3_service import S3Service
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.authentication.serializers import (
     AuthTokenPairSerializer,
-    RegistrationSerializer,
     ProfileSerializer,
+    RegistrationSerializer,
 )
 from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
 )
+from auth_service.s3_service import S3Service
 
 
 class RegistrationAPIView(generics.GenericAPIView):
@@ -74,7 +71,7 @@ class LoginAPIView(TokenObtainPairView):
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         return super().post(request, *args, **kwargs)
-    
+
 
 class ProfileAPIView(generics.RetrieveAPIView):
     queryset = OrganizationUser.objects.all()
@@ -84,11 +81,10 @@ class ProfileAPIView(generics.RetrieveAPIView):
     def get_object(self):
         profile_id = self.request.user.id
         return get_object_or_404(OrganizationUser, id=profile_id)
-    
+
     @swagger_auto_schema(
         responses={status.HTTP_200_OK: ProfileSerializer()},
     )
-
     def get(self, request: Request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
@@ -106,7 +102,6 @@ class EditProfileAPIView(generics.GenericAPIView):
         request_body=ProfileSerializer,
         responses={status.HTTP_200_OK: ProfileSerializer()},
     )
-
     def put(self, request: Request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
@@ -117,5 +112,5 @@ class EditProfileAPIView(generics.GenericAPIView):
             response_data = serializer.data
             response_data["avatar"] = avatar_url
             return Response(response_data, status=status.HTTP_200_OK)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
