@@ -75,7 +75,7 @@ class SpaceDFConsoleLoginSerializer(serializers.Serializer):
 class ProfileSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     email = serializers.EmailField(read_only=True)
-    avatar = serializers.ImageField(required=False)
+    avatar = serializers.CharField(required=False)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     location = serializers.CharField()
@@ -98,13 +98,6 @@ class ProfileSerializer(serializers.Serializer):
         )
 
     def update(self, instance, validated_data):
-        s3_service = S3Service()
-
-        avatar = validated_data.pop("avatar", None)
-        if avatar:
-            file_name = s3_service.upload_file(avatar)
-            instance.avatar = file_name
-
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

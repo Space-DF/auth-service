@@ -45,4 +45,6 @@ urlpatterns = [
     path("api/", include("apps.space.urls")),
     path("api/", include("apps.space_role.urls")),
     path("api/", include("apps.oauth_credentials.urls")),
+    # presigned-url
+    path("api/", include("apps.presigned_url.urls")),
 ]

@@ -16,7 +16,6 @@ from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
 )
-from auth_service.s3_service import S3Service
 
 
 class RegistrationAPIView(generics.GenericAPIView):
@@ -102,15 +101,11 @@ class EditProfileAPIView(generics.GenericAPIView):
         request_body=ProfileSerializer,
         responses={status.HTTP_200_OK: ProfileSerializer()},
     )
-    def put(self, request: Request, *args, **kwargs):
+    def put(self, request: Request):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            filename = instance.avatar
-            avatar_url = S3Service().get_url(filename) if filename else None
-            response_data = serializer.data
-            response_data["avatar"] = avatar_url
-            return Response(response_data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

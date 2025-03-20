@@ -54,4 +54,6 @@ urlpatterns = [
     path("api/health", health_check),
     # well-known
     path("api/", include("common.apps.jwks.urls")),
+    # presigned-url
+    path("api/", include("apps.presigned_url.urls")),
 ]

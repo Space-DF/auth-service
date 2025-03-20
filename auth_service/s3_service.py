@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 import boto3
@@ -6,30 +7,37 @@ from django.conf import settings
 
 class S3Service:
     def __init__(self):
-        self.client = boto3.client(
-            "s3",
-            aws_access_key_id=settings.AWS_S3.get("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=settings.AWS_S3.get("AWS_SECRET_ACCESS_KEY_ID"),
-            region_name=settings.AWS_S3.get("AWS_REGION"),
-        )
-        self.bucket_name = settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME")
+        try:
+            self.client = boto3.client("s3")
+            self.bucket_name = settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME")
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            self.client = None
 
-    def upload_file(self, file):
+    def get_presigned_url(self, expiration=3600):
         """
-        Upload file to S3
+        return presigned URL and file name
         """
-        file_extension = file.name.split(".")[-1]
-        file_name = f"{uuid.uuid4()}.{file_extension}"
+        if not self.client:
+            logging.error("S3 client is not initialized.")
+            return None
 
-        self.client.upload_fileobj(
-            file,
-            self.bucket_name,
-            f"uploads/{file_name}",
-        )
-        return file_name
+        try:
+            file_name = uuid.uuid4()
+            presigned_url = self.client.generate_presigned_url(
+                ClientMethod="put_object",
+                Params={"Bucket": self.bucket_name, "Key": f"uploads/{file_name}.png"},
+                ExpiresIn=expiration,
+                HttpMethod="PUT",
+            )
+            return {"file_name": file_name, "presigned_url": presigned_url}
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            return None
 
     def get_url(self, file_name):
         """
         Return the URL from name file
         """
-        return f"https://{self.bucket_name}.s3.{settings.AWS_S3.get('AWS_REGION')}.amazonaws.com/uploads/{file_name}"
+        region = settings.AWS_S3.get('AWS_REGION')
+        return f"https://{self.bucket_name}.s3.{region}.amazonaws.com/uploads/{file_name}.png"

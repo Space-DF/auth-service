@@ -249,7 +249,7 @@ OAUTH_CLIENTS = {
 
 AWS_S3 = {
     "AWS_ACCESS_KEY_ID": os.getenv("AWS_ACCESS_KEY_ID", ""),  # noqa
-    "AWS_SECRET_ACCESS_KEY_ID": os.getenv("AWS_SECRET_ACCESS_KEY_ID", ""),  # noqa
+    "AWS_SECRET_ACCESS_KEY": os.getenv("AWS_SECRET_ACCESS_KEY", ""),  # noqa
     "AWS_STORAGE_BUCKET_NAME": os.getenv("AWS_STORAGE_BUCKET_NAME", ""),  # noqa
     "AWS_REGION": os.getenv("AWS_REGION", ""),  # noqa
 }
