@@ -78,24 +78,16 @@ class ProfileAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        profile_id = self.request.user.id
-        return get_object_or_404(OrganizationUser, id=profile_id)
+        user_id = self.request.headers.get("X-User-ID", None)
+        if not user_id:
+            return None
+        return get_object_or_404(OrganizationUser, id=user_id)
 
     @swagger_auto_schema(
         responses={status.HTTP_200_OK: ProfileSerializer()},
     )
     def get(self, request: Request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
-
-
-class EditProfileAPIView(generics.GenericAPIView):
-    queryset = OrganizationUser.objects.all()
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        profile_id = self.request.user.id
-        return get_object_or_404(OrganizationUser, id=profile_id)
 
     @swagger_auto_schema(
         request_body=ProfileSerializer,

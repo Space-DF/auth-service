@@ -55,5 +55,5 @@ urlpatterns = [
     # well-known
     path("api/", include("common.apps.jwks.urls")),
     # presigned-url
-    path("api/", include("apps.presigned_url.urls")),
+    path("api/", include("apps.upload_file.urls")),
 ]
