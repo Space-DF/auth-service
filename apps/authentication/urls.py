@@ -5,11 +5,13 @@ from apps.authentication.views import (
     CustomRefreshTokenAPIView,
     LoginAPIView,
     RegistrationAPIView,
+    ResetPasswordAPIView,
 )
 
 urlpatterns = [
     path("auth/register", RegistrationAPIView.as_view(), name="register"),
     path("auth/login", LoginAPIView.as_view(), name="login"),
+    path("auth/reset-password", ResetPasswordAPIView.as_view(), name="reset_password"),
     path(
         "auth/refresh-token", CustomRefreshTokenAPIView.as_view(), name="refresh_token"
     ),
