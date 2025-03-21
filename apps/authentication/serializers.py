@@ -133,6 +133,43 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         }
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value: str):
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 digit."
+            )
+        if all(char.isalnum() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 special letter"
+            )
+        if not any(char.isupper() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 upper case letter"
+            )
+        if not any(char.islower() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 lower case letter"
+            )
+        return value
+
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data.get("password")):
+            raise serializers.ValidationError(
+                {"error": "Current password is incorrect"}
+            )
+        if validated_data["password"] == validated_data.get("new_password"):
+            raise serializers.ValidationError(
+                {"error": "New password cannot be the same as the current password"}
+            )
+        instance.set_password(validated_data.get("new_password"))
+        instance.save()
+        return instance
+
+
 class AuthTokenPairSerializer(TokenPairSerializer):
     default_space = serializers.CharField()
 

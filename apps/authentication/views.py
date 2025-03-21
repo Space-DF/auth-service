@@ -2,7 +2,7 @@ from common.apps.organization_user.models import OrganizationUser
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -11,6 +11,7 @@ from apps.authentication.serializers import (
     AuthTokenPairSerializer,
     ProfileSerializer,
     RegistrationSerializer,
+    ChangePasswordSerializer,
 )
 from apps.authentication.services import (
     create_space_access_token,
@@ -72,10 +73,27 @@ class LoginAPIView(TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
+class ChangePasswordAPIView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+
+    def get_object(self):
+        user_id = self.request.headers.get("X-User-ID", None)
+        if not user_id:
+            return None
+        return get_object_or_404(OrganizationUser, id=user_id)
+
+    def put(self, request: Request):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class ProfileAPIView(generics.RetrieveAPIView):
     queryset = OrganizationUser.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)
