@@ -4,6 +4,7 @@ from django.urls import include, path
 from apps.authentication.views import (
     CustomRefreshTokenAPIView,
     LoginAPIView,
+    ProfileAPIView,
     RegistrationAPIView,
     ResetPasswordAPIView,
 )
@@ -12,6 +13,7 @@ urlpatterns = [
     path("auth/register", RegistrationAPIView.as_view(), name="register"),
     path("auth/login", LoginAPIView.as_view(), name="login"),
     path("auth/reset-password", ResetPasswordAPIView.as_view(), name="reset_password"),
+    path("auth/profile", ProfileAPIView.as_view(), name="profile"),
     path(
         "auth/refresh-token", CustomRefreshTokenAPIView.as_view(), name="refresh_token"
     ),

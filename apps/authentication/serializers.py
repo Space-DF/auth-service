@@ -6,9 +6,11 @@ from common.apps.refresh_tokens.serializers import (
 )
 from common.apps.space.models import Space
 from common.errors.errors import ExistedEmailError
+from django.conf import settings
 from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
+from apps.upload_file.service import get_url
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -69,6 +71,42 @@ class SpaceDFConsoleLoginSerializer(serializers.Serializer):
     code_verifier = serializers.CharField()
     code = serializers.CharField()
     client_id = serializers.CharField()
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(read_only=True)
+    avatar = serializers.CharField(required=False)
+    is_owner = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = OrganizationUser
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "location",
+            "avatar",
+            "company_name",
+            "title",
+            "is_owner",
+        )
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.avatar:
+            data["avatar"] = get_url(
+                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                settings.AWS_S3.get("AWS_REGION"),
+                instance.avatar,
+            )
+        return data
 
 
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
