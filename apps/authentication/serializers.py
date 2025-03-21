@@ -133,7 +133,7 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         }
 
 
-class ResetPasswordSerializer(serializers.Serializer):
+class ChangePasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
     new_password = serializers.CharField(write_only=True)
 

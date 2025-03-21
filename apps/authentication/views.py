@@ -2,7 +2,7 @@ from common.apps.organization_user.models import OrganizationUser
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -11,7 +11,7 @@ from apps.authentication.serializers import (
     AuthTokenPairSerializer,
     ProfileSerializer,
     RegistrationSerializer,
-    ResetPasswordSerializer,
+    ChangePasswordSerializer,
 )
 from apps.authentication.services import (
     create_space_access_token,
@@ -73,8 +73,8 @@ class LoginAPIView(TokenObtainPairView):
         return super().post(request, *args, **kwargs)
 
 
-class ResetPasswordAPIView(generics.GenericAPIView):
-    serializer_class = ResetPasswordSerializer
+class ChangePasswordAPIView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)
@@ -94,7 +94,6 @@ class ResetPasswordAPIView(generics.GenericAPIView):
 class ProfileAPIView(generics.RetrieveAPIView):
     queryset = OrganizationUser.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)
