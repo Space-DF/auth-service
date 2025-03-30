@@ -1,14 +1,17 @@
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.refresh_tokens.serializers import (
     BaseTokenObtainPairSerializer,
+    CustomTokenRefreshSerializer,
     TokenPairSerializer,
 )
 from common.apps.space.models import Space
 from common.errors.errors import ExistedEmailError
+from django.conf import settings
 from django.core.cache import cache
 from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
+from apps.upload_file.service import get_url
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -89,6 +92,42 @@ class SpaceDFConsoleLoginSerializer(serializers.Serializer):
     client_id = serializers.CharField()
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(read_only=True)
+    avatar = serializers.CharField(required=False)
+    is_owner = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = OrganizationUser
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "location",
+            "avatar",
+            "company_name",
+            "title",
+            "is_owner",
+        )
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.avatar:
+            data["avatar"] = get_url(
+                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                settings.AWS_S3.get("AWS_REGION"),
+                instance.avatar,
+            )
+        return data
+
+
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def get_tokens(self):
         tenant = None
@@ -113,9 +152,50 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         }
 
 
+class ChangePasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value: str):
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 digit."
+            )
+        if all(char.isalnum() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 special letter"
+            )
+        if not any(char.isupper() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 upper case letter"
+            )
+        if not any(char.islower() for char in value):
+            raise serializers.ValidationError(
+                "This new password must contain at least 1 lower case letter"
+            )
+        return value
+
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data.get("password")):
+            raise serializers.ValidationError(
+                {"error": "Current password is incorrect"}
+            )
+        if validated_data["password"] == validated_data.get("new_password"):
+            raise serializers.ValidationError(
+                {"error": "New password cannot be the same as the current password"}
+            )
+        instance.set_password(validated_data.get("new_password"))
+        instance.save()
+        return instance
+
+
 class AuthTokenPairSerializer(TokenPairSerializer):
     default_space = serializers.CharField()
 
 
 class SendOTPSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
+
+
+class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
+    space = serializers.CharField(write_only=True, allow_null=True)

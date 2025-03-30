@@ -1,8 +1,12 @@
+from common.apps.organization_user.models import OrganizationUser
 from common.swagger.params import get_space_header_params
 from common.utils.send_otp_email import send_otp_email
+from django.conf import settings
 from django.core.cache import cache
+from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -10,6 +14,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.authentication.serializers import (
     AuthTokenPairSerializer,
+    ChangePasswordSerializer,
+    ProfileSerializer,
     RegistrationSerializer,
     SendOTPSerializer,
 )
@@ -48,20 +54,11 @@ class RegistrationAPIView(generics.GenericAPIView):
 
 class CustomRefreshTokenAPIView(TokenRefreshView):
     authentication_classes = []
-
-    @swagger_auto_schema(manual_parameters=get_space_header_params())
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+    _serializer_class = "apps.authentication.serializers.SpaceTokenRefreshSerializer"
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        space_slug = self.request.headers.get("X-Space")
-        if not space_slug:
-            return Response(
-                {"detail": "X-Space header is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        space_slug = self.request.data.get("space")
         params = {
             "space_slug_name": space_slug,
         }
@@ -93,10 +90,61 @@ class SendOTPView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
-
-            otp_code = send_otp_email(email)
+            otp_code = send_otp_email(settings.DEFAULT_FROM_EMAIL, email)
             cache.set(f"otp_{email}", otp_code, timeout=600)  # Store OTP for 10 minutes
-
             return Response({"message": "OTP sent successfully!"})
 
         return Response(serializer.errors, status=400)
+
+
+class ChangePasswordAPIView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+
+    def get_object(self):
+        user_id = self.request.headers.get("X-User-ID", None)
+        if not user_id:
+            return None
+        return get_object_or_404(OrganizationUser, id=user_id)
+
+    def put(self, request: Request):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileAPIView(generics.RetrieveAPIView):
+    queryset = OrganizationUser.objects.all()
+    serializer_class = ProfileSerializer
+
+    def get_object(self):
+        user_id = self.request.headers.get("X-User-ID", None)
+        if not user_id:
+            raise NotFound(detail="The user not found")
+        return get_object_or_404(OrganizationUser, id=user_id)
+
+    @swagger_auto_schema(
+        responses={status.HTTP_200_OK: ProfileSerializer()},
+    )
+    def get(self, request: Request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        request_body=ProfileSerializer,
+        responses={status.HTTP_200_OK: ProfileSerializer()},
+    )
+    def put(self, request: Request):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

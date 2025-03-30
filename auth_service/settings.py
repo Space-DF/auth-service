@@ -247,6 +247,13 @@ OAUTH_CLIENTS = {
     }
 }
 
+AWS_S3 = {
+    "AWS_ACCESS_KEY_ID": os.getenv("AWS_ACCESS_KEY_ID", ""),  # noqa
+    "AWS_SECRET_ACCESS_KEY": os.getenv("AWS_SECRET_ACCESS_KEY", ""),  # noqa
+    "AWS_STORAGE_BUCKET_NAME": os.getenv("AWS_STORAGE_BUCKET_NAME", ""),  # noqa
+    "AWS_REGION": os.getenv("AWS_REGION", ""),  # noqa
+}
+
 # Console service configuration
 CONSOLE_SERVICE_URL = os.getenv("CONSOLE_SERVICE_URL", "")  # noqa
 ROOT_API_KEY = os.getenv("ROOT_API_KEY", "")  # noqa

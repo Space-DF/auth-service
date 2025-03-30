@@ -22,3 +22,5 @@ requests==2.32.3
 django-allauth==65.0.2
 
 django-redis==5.4.0
+# boto3
+boto3==1.37.13

@@ -31,7 +31,7 @@ schema_view = get_tenant_schema_view(
         contact=openapi.Contact(email="contact@snippets.local"),
         license=openapi.License(name="BSD License"),
     ),
-    path="/auth/api/",
+    path="/api/",
     public=True,
     permission_classes=[permissions.AllowAny],
 )
@@ -53,5 +53,7 @@ urlpatterns = [
     # health
     path("auth/api/health", health_check),
     # well-known
-    path("auth/api/", include("common.apps.jwks.urls")),
+    path("api/", include("common.apps.jwks.urls")),
+    # presigned-url
+    path("api/", include("apps.upload_file.urls")),
 ]
