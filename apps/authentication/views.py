@@ -1,5 +1,4 @@
 from common.apps.organization_user.models import OrganizationUser
-from common.swagger.params import get_space_header_params
 from common.utils.send_otp_email import send_otp_email
 from django.conf import settings
 from django.core.cache import cache
