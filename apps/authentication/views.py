@@ -1,5 +1,5 @@
 from common.apps.organization_user.models import OrganizationUser
-from common.utils.send_otp_email import send_otp_email
+from common.utils.send_email import send_email
 from django.conf import settings
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
@@ -21,6 +21,8 @@ from apps.authentication.serializers import (
 from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
+    generate_otp,
+    render_email_format,
 )
 
 
@@ -88,9 +90,12 @@ class SendOTPView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            otp_code = generate_otp()
             email = serializer.validated_data["email"]
-            otp_code = send_otp_email(settings.DEFAULT_FROM_EMAIL, email)
-            cache.set(f"otp_{email}", otp_code, timeout=600)  # Store OTP for 10 minutes
+            subject = "Your One-Time Sign-In Code"
+            message = render_email_format(otp_code)
+            send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
+            cache.set(f"otp_{email}", otp_code, timeout=600)
             return Response({"message": "OTP sent successfully!"})
 
         return Response(serializer.errors, status=400)

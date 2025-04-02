@@ -79,7 +79,7 @@ ROOT_URLCONF = "auth_service.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -127,12 +127,9 @@ USE_TZ = True
 
 # Static files
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATIC_URL = "/auth/static/"
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "<app_name>/static"),
-    os.path.join(BASE_DIR, "static"),
-)
-
+STATIC_URL = "static/"
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

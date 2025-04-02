@@ -1,5 +1,10 @@
+import secrets
+import string
+
 from common.apps.refresh_tokens.services import create_jwt_tokens
 from common.apps.space_role.models import SpacePolicy
+from django.template.loader import render_to_string
+from rest_framework.exceptions import ValidationError
 
 
 def create_space_access_token(space_slug_name, user_id, access_token):
@@ -26,3 +31,21 @@ def create_space_jwt_tokens(user, space_slug, issuer=None, **kwargs):
     if space_slug:
         access_token = create_space_access_token(space_slug, user.id, access_token)
     return refresh_token, access_token
+
+
+def generate_otp(length=6):
+    """Generate a 6-digit OTP."""
+    return "".join(secrets.choice(string.digits) for _ in range(length))
+
+
+def render_email_format(otp_code):
+    try:
+        html_message = render_to_string(
+            "email_otp.html",
+            {
+                "otp_code": otp_code,
+            },
+        )
+        return html_message
+    except Exception as e:
+        raise ValidationError({"error": f"Error: {e}"})
