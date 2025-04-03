@@ -19,3 +19,7 @@ class SpaceSerializer(serializers.ModelSerializer):
         if value.startswith("default"):
             raise serializers.ValidationError("The slug name is invalid.")
         return value
+
+
+class InviteUserSerial(serializers.Serializer):
+    receiver_list = serializers.ListField()
