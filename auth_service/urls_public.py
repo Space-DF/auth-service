@@ -51,7 +51,7 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     # health
-    path("api/health", health_check),
+    path("auth/api/health", health_check),
     # well-known
     path("api/", include("common.apps.jwks.urls")),
     # presigned-url

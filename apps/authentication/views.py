@@ -1,10 +1,13 @@
 from common.apps.organization_user.models import OrganizationUser
+from common.utils.send_email import send_email
+from django.conf import settings
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
-from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -13,10 +16,13 @@ from apps.authentication.serializers import (
     ChangePasswordSerializer,
     ProfileSerializer,
     RegistrationSerializer,
+    SendOTPSerializer,
 )
 from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
+    generate_otp,
+    render_email_format,
 )
 
 
@@ -72,6 +78,27 @@ class LoginAPIView(TokenObtainPairView):
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         return super().post(request, *args, **kwargs)
+
+
+class SendOTPView(generics.GenericAPIView):
+    """API View to send OTP for email verification"""
+
+    serializer_class = SendOTPSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            otp_code = generate_otp()
+            email = serializer.validated_data["email"]
+            subject = "Your One-Time Sign-In Code"
+            message = render_email_format(otp_code)
+            send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
+            cache.set(f"otp_{email}", otp_code, timeout=600)
+            return Response({"message": "OTP sent successfully!"})
+
+        return Response(serializer.errors, status=400)
 
 
 class ChangePasswordAPIView(generics.GenericAPIView):

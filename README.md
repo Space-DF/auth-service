@@ -35,6 +35,11 @@ git clone -b dev git@github.com:Space-DF/django-common-utils.git
   docker run -d --name some-rabbit -p 5672:5672 -p 5673:5673 -p 15672:15672 rabbitmq:3-management
   ```
 
+- Run Redis
+  ```
+  docker run -d --name redis -p 6379:6379 redis
+  ```
+
 - Init .env
   ```
   cp .env.example .env

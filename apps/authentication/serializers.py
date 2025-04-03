@@ -7,6 +7,7 @@ from common.apps.refresh_tokens.serializers import (
 from common.apps.space.models import Space
 from common.errors.errors import ExistedEmailError
 from django.conf import settings
+from django.core.cache import cache
 from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
@@ -19,15 +20,28 @@ class RegistrationSerializer(serializers.ModelSerializer):
     default_space = serializers.CharField(read_only=True)
     first_name = serializers.CharField(max_length=50)
     last_name = serializers.CharField(max_length=50)
+    otp = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = OrganizationUser
-        fields = ("id", "first_name", "last_name", "email", "password", "default_space")
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "default_space",
+            "otp",
+        )
 
     def validate(self, data):
         email = data.get("email", None)
         if OrganizationUser.objects.filter(email__icontains=email).exists():
             raise ExistedEmailError()
+        otp = data.get("otp")
+        stored_otp = cache.get(f"otp_{email}")
+        if not stored_otp or stored_otp != otp:
+            raise serializers.ValidationError({"otp": "Invalid or expired OTP."})
         return super().validate(data)
 
     def validate_password(self, value: str):
@@ -64,6 +78,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return value.strip()
 
     def create(self, validated_data):
+        email = validated_data.get("email")
+        validated_data.pop("otp", None)  # Ensure OTP is not passed to the database
+        cache.delete(
+            f"otp_{email}"
+        )  # Remove OTP from Redis after successful validation
         return OrganizationUser.objects.create_user(**validated_data)
 
 
@@ -172,6 +191,10 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class AuthTokenPairSerializer(TokenPairSerializer):
     default_space = serializers.CharField()
+
+
+class SendOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
 
 
 class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
