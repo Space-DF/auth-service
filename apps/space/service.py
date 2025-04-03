@@ -1,9 +1,7 @@
 import base64
 import json
-import os
 import secrets
 
-from django.conf import settings
 from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 

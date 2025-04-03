@@ -4,6 +4,7 @@ from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
 from common.utils.send_email import send_email
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
+from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models.signals import post_save
@@ -15,7 +16,6 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from django.conf import settings
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import decode_token, generate_token, render_email_format
@@ -87,9 +87,7 @@ class InviteUserAPIView(generics.CreateAPIView):
         name_sender = instance.first_name + " " + instance.last_name
 
         for email_receiver in list_email:
-            token = generate_token(
-                email_receiver, request.tenant.slug_name, space_id
-            )
+            token = generate_token(email_receiver, request.tenant.slug_name, space_id)
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space", kwargs={"token": token})
             )
