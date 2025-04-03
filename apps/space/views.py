@@ -15,6 +15,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from django.conf import settings
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import decode_token, generate_token, render_email_format
@@ -87,7 +88,7 @@ class InviteUserAPIView(generics.CreateAPIView):
 
         for email_receiver in list_email:
             token = generate_token(
-                instance.email, email_receiver, request.tenant.slug_name, space_id
+                email_receiver, request.tenant.slug_name, space_id
             )
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space", kwargs={"token": token})
@@ -96,7 +97,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                 name_sender, email_receiver, space.name, invite_url
             )
             cache.set(f"invite_{email_receiver}_{space_id}", token, timeout=604800)
-            send_email(instance.email, list_email, subject, message)
+            send_email(settings.DEFAULT_FROM_EMAIL, list_email, subject, message)
         return Response(
             {"result": "Invitation sent successfully"},
             status=status.HTTP_200_OK,
@@ -107,7 +108,7 @@ class AddUserToSpaceAPIView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
-        _, space_id, email_receiver, slug_name = decode_token(token)
+        space_id, email_receiver, slug_name = decode_token(token)
         key_token = f"invite_{email_receiver}_{space_id}"
         if key_token not in cache.keys("invite_*"):
             return redirect(f"https://{slug_name}.spacedf.net/invitation?status=failed")
@@ -116,7 +117,7 @@ class AddUserToSpaceAPIView(generics.RetrieveAPIView):
             email=email_receiver
         ).first()
         if not user_organization:
-            return redirect(f"https://{slug_name}.spacedf.net")
+            return redirect(f"https://{slug_name}.spacedf.net?token={token}")
 
         try:
             with transaction.atomic():
@@ -127,7 +128,7 @@ class AddUserToSpaceAPIView(generics.RetrieveAPIView):
                     space_role=space_role, organization_user=user_organization
                 )
                 return redirect(
-                    f"https://{slug_name}.spacedf.net/invitation?status=success?token={token}"
+                    f"https://{slug_name}.spacedf.net/invitation?status=success"
                 )
         except Exception:
             return redirect(f"https://{slug_name}.spacedf.net/invitation?status=failed")

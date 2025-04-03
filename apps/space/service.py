@@ -8,11 +8,10 @@ from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 
 
-def generate_token(email_sender, email_receiver, slug_name, space_id):
+def generate_token(email_receiver, slug_name, space_id):
     salt = secrets.token_hex(16)
     data = json.dumps(
         {
-            "email_sender": email_sender,
             "email_receiver": email_receiver,
             "space_id": space_id,
             "slug_name": slug_name,
@@ -27,7 +26,6 @@ def decode_token(token):
     try:
         data = json.loads(base64.b64decode(token).decode())
         return (
-            data.get("email_sender"),
             data.get("space_id"),
             data.get("email_receiver"),
             data.get("slug_name"),
@@ -43,15 +41,12 @@ def encode_image_to_base64(image_path):
 
 def render_email_format(sender, email_receiver, space_name, invite_url):
     try:
-        image_path = os.path.join(settings.BASE_DIR, "static/images/logo.png")
-        base64_image = f"data:image/png;base64,{encode_image_to_base64(image_path)}"
         html_message = render_to_string(
             "email_format.html",
             {
-                "email_sender": sender,
+                "sender_name": sender,
                 "space_name": space_name,
                 "email_receiver": email_receiver,
-                "base64_image": base64_image,
                 "invite_url": invite_url,
             },
         )
