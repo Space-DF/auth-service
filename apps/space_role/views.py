@@ -60,7 +60,7 @@ class RetrieveSpacePolicyView(RetrieveAPIView):
 class ListSpaceRoleUserView(SpaceListAPIView):
     model = SpaceRoleUser
     serializer_class = SpaceRoleUserSerializer
-    queryset = SpaceRoleUser.objects.all()
+    queryset = SpaceRoleUser.objects.select_related("space_role", "organization_user")
     space_field = "space_role__space"
     pagination_class = BasePagination
     filter_backends = [OrderingFilter, SearchFilter]
@@ -72,7 +72,7 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveDestroyAPIView):
     model = SpaceRoleUser
     serializer_class = SpaceRoleUserSerializer
     lookup_field = "id"
-    queryset = SpaceRoleUser.objects.all()
+    queryset = SpaceRoleUser.objects.select_related("space_role", "organization_user")
     space_field = "space_role__space"
 
 

@@ -1,6 +1,8 @@
 from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from rest_framework import serializers
 
+from apps.authentication.serializers import ProfileSerializer
+
 
 class SpacePolicySerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +28,9 @@ class SpaceRoleSerializer(serializers.ModelSerializer):
 
 
 class SpaceRoleUserSerializer(serializers.ModelSerializer):
+    space_role = SpaceRoleSerializer(read_only=True)
+    organization_user = ProfileSerializer(read_only=True)
+
     class Meta:
         model = SpaceRoleUser
         fields = "__all__"
