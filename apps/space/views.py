@@ -123,13 +123,10 @@ class AddUserToSpaceAPIView(generics.RetrieveAPIView):
         if not user_organization:
             return redirect(f"https://{slug_name}.spacedf.net?token={token}")
 
-        try:
-            space_role = SpaceRole.objects.get(id=space_role_id)
-            SpaceRoleUser.objects.get_or_create(
-                space_role=space_role, organization_user=user_organization
-            )
-            return redirect(
-                f"https://{slug_name}.spacedf.net/invitation?status=success"
-            )
-        except Exception:
-            return redirect(f"https://{slug_name}.spacedf.net/invitation?status=failed")
+        space_role = SpaceRole.objects.get(id=space_role_id)
+        SpaceRoleUser.objects.get_or_create(
+            space_role=space_role, organization_user=user_organization
+        )
+        return redirect(
+            f"https://{slug_name}.spacedf.net/invitation?status=success"
+        )
