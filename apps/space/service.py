@@ -6,13 +6,14 @@ from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 
 
-def generate_token(email_receiver, slug_name, space_id):
+def generate_token(email_receiver, slug_name, space_id, space_role_id):
     salt = secrets.token_hex(16)
     data = json.dumps(
         {
             "email_receiver": email_receiver,
             "space_id": space_id,
             "slug_name": slug_name,
+            "space_role_id": space_role_id,
             "salt": salt,
         }
     )
@@ -27,6 +28,7 @@ def decode_token(token):
             data.get("space_id"),
             data.get("email_receiver"),
             data.get("slug_name"),
+            data.get("space_role_id"),
         )
     except Exception:
         return None, None, None, None
