@@ -39,3 +39,9 @@ class SpaceRoleUserSerializer(serializers.ModelSerializer):
             "created_at": {"read_only": True},
             "updated_at": {"read_only": True},
         }
+
+
+class SpaceRoleUserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpaceRoleUser
+        fields = ["space_role"]

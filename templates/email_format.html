@@ -21,7 +21,7 @@
             align-items: center;
         }
         h4 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 400;
         }
         p {
@@ -66,11 +66,11 @@
 </head>
 <body>
     <div class="container">
-        <img src="{% static 'images/logo.png' %}" width="100" height="100" alt="Logo" class="logo">
-        <h4><b>@{{sender_name}}</b> has invited you to join the {{space_name}} space.</h4>
+        <img src="https://api.v0.spacedf.net/static/images/logo.png" width="120" height="100" alt="Logo" class="logo">
+        <h4>@{{sender_name}} has invited you to join the {{space_name}} space.</h4>
         <div class="info">
             <p>Hi you,</p>
-            <p>@{{sender_name}} has invited you to join {{space_name}} on {{space_name}}. By joining, you’ll gain access to shared devices, dashboards, and resources, making collaboration with our team seamless and efficient.</p>
+            <p>@{{sender_name}} has invited you to join {{space_name}} space on SpaceDF Platform. By joining, you’ll gain access to shared devices, dashboards, and resources, making collaboration with our team seamless and efficient.</p>
             <p>To accept the invitation, please click the link below:</p>
             <a href="{{ invite_url }}" class="button">Join {{space_name}}</a>
             <p class="footer">Note: This invitation will expire in 7 days.</p>
