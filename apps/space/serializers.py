@@ -21,5 +21,10 @@ class SpaceSerializer(serializers.ModelSerializer):
         return value
 
 
+class ReceiverSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    space_role_id = serializers.UUIDField()
+
+
 class InviteUserSerial(serializers.Serializer):
-    receiver_list = serializers.ListField()
+    receiver_list = serializers.ListField(child=ReceiverSerializer())

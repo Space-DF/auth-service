@@ -80,22 +80,28 @@ class InviteUserAPIView(generics.CreateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        list_email = serializer.data.get("receiver_list")
+        receiver_list = serializer.data.get("receiver_list")
         space_id = kwargs.get("space_id")
         space = get_object_or_404(Space, id=space_id)
         subject = "The invitation"
         name_sender = instance.first_name + " " + instance.last_name
 
-        for email_receiver in list_email:
-            token = generate_token(email_receiver, request.tenant.slug_name, space_id)
+        for receiver_item in receiver_list:
+            receiver_email = receiver_item.get("email")
+            token = generate_token(
+                receiver_email,
+                request.tenant.slug_name,
+                space_id,
+                receiver_item.get("space_role_id"),
+            )
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space", kwargs={"token": token})
             )
             message = render_email_format(
-                name_sender, email_receiver, space.name, invite_url
+                name_sender, receiver_email, space.name, invite_url
             )
-            cache.set(f"invite_{email_receiver}_{space_id}", token, timeout=604800)
-            send_email(settings.DEFAULT_FROM_EMAIL, list_email, subject, message)
+            cache.set(f"invite_{receiver_email}_{space_id}", token, timeout=604800)
+            send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
             {"result": "Invitation sent successfully"},
             status=status.HTTP_200_OK,
@@ -106,7 +112,7 @@ class AddUserToSpaceAPIView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
-        space_id, email_receiver, slug_name = decode_token(token)
+        space_id, email_receiver, slug_name, space_role_id = decode_token(token)
         key_token = f"invite_{email_receiver}_{space_id}"
         if key_token not in cache.keys("invite_*"):
             return redirect(f"https://{slug_name}.spacedf.net/invitation?status=failed")
@@ -118,15 +124,12 @@ class AddUserToSpaceAPIView(generics.RetrieveAPIView):
             return redirect(f"https://{slug_name}.spacedf.net?token={token}")
 
         try:
-            with transaction.atomic():
-                space_role = SpaceRole.objects.filter(
-                    space_id=space_id, name="Reader"
-                ).first()
-                SpaceRoleUser.objects.get_or_create(
-                    space_role=space_role, organization_user=user_organization
-                )
-                return redirect(
-                    f"https://{slug_name}.spacedf.net/invitation?status=success"
-                )
+            space_role = SpaceRole.objects.get(id=space_role_id)
+            SpaceRoleUser.objects.get_or_create(
+                space_role=space_role, organization_user=user_organization
+            )
+            return redirect(
+                f"https://{slug_name}.spacedf.net/invitation?status=success"
+            )
         except Exception:
             return redirect(f"https://{slug_name}.spacedf.net/invitation?status=failed")
