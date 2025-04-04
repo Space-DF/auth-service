@@ -4,7 +4,6 @@ from common.pagination.base_pagination import BasePagination
 from common.views.space import (
     SpaceListAPIView,
     SpaceListCreateAPIView,
-    SpaceRetrieveDestroyAPIView,
     SpaceRetrieveUpdateDestroyAPIView,
 )
 from django.db import transaction
@@ -17,6 +16,7 @@ from apps.space_role.serializers import (
     SpacePolicySerializer,
     SpaceRoleSerializer,
     SpaceRoleUserSerializer,
+    SpaceRoleUserUpdateSerializer,
 )
 from apps.space_role.services import create_space_default_role
 
@@ -68,12 +68,17 @@ class ListSpaceRoleUserView(SpaceListAPIView):
     search_fields = ["id"]
 
 
-class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveDestroyAPIView):
+class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
     model = SpaceRoleUser
     serializer_class = SpaceRoleUserSerializer
     lookup_field = "id"
     queryset = SpaceRoleUser.objects.select_related("space_role", "organization_user")
     space_field = "space_role__space"
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return SpaceRoleUserUpdateSerializer
+        return super().get_serializer_class()
 
 
 @receiver(post_save, sender=Space)
