@@ -198,4 +198,4 @@ class SendOTPSerializer(serializers.Serializer):
 
 
 class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
-    space = serializers.CharField(write_only=True, allow_null=True)
+    space_slug_name = serializers.CharField(write_only=True, allow_null=True)

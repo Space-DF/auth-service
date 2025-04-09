@@ -59,7 +59,7 @@ class CustomRefreshTokenAPIView(TokenRefreshView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        space_slug = self.request.data.get("space")
+        space_slug = self.request.data.get("space_slug_name")
         params = {
             "space_slug_name": space_slug,
         }
