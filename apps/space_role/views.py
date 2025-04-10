@@ -65,7 +65,11 @@ class ListSpaceRoleUserView(SpaceListAPIView):
     pagination_class = BasePagination
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["created_at"]
-    search_fields = ["id"]
+    search_fields = [
+        "organization_user__first_name",
+        "organization_user__last_name",
+        "organization_user__email",
+    ]
 
 
 class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
