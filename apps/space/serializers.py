@@ -1,6 +1,9 @@
 from common.apps.space.models import Space
+from django.conf import settings
 from rest_framework import serializers
 from django.conf import settings
+from apps.upload_file.service import get_url
+
 from apps.upload_file.service import get_url
 
 
@@ -22,6 +25,16 @@ class SpaceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("The slug name is invalid.")
         return value
     
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.logo:
+            data["logo"] = get_url(
+                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                settings.AWS_S3.get("AWS_REGION"),
+                instance.logo,
+            )
+        return data
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.logo:
