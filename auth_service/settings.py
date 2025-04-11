@@ -251,6 +251,31 @@ AWS_S3 = {
     "AWS_REGION": os.getenv("AWS_REGION", ""),  # noqa
 }
 
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "OAUTH_PKCE_ENABLED": True,
+        "APP": {
+            "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+            "secret": os.getenv("GOOGLE_CLIENT_SECRET", ""),
+            "key": "",
+        },
+    },
+    "apple": {
+        "APPS": [
+            {
+                "client_id": os.getenv("APPLE_CLIENT_ID", ""),
+                "secret": os.getenv("APPLE_CLIENT_SECRET", ""),
+                "key": os.getenv("APPLE_CLIENT_KEY", ""),
+                "settings": {
+                    "certificate_key": os.getenv("APPLE_CERTIFICATE_KEY", ""),
+                },
+            }
+        ]
+    },
+}
+
 # Console service configuration
 CONSOLE_SERVICE_URL = os.getenv("CONSOLE_SERVICE_URL", "")  # noqa
 ROOT_API_KEY = os.getenv("ROOT_API_KEY", "")  # noqa
