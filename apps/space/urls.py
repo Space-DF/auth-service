@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.space.views import AddUserToSpaceAPIView, InviteUserAPIView, SpaceView
+from apps.space.views import AddUserToSpaceAPIView, InviteUserAPIView, SpaceView, RedirectAddUserToSpaceAPIView
 
 app_name = "space"
 
@@ -10,5 +10,6 @@ urlpatterns = [
         SpaceView.as_view(),
     ),
     path("spaces/invitation/<str:slug_name>", InviteUserAPIView.as_view(), name="invitation"),
-    path("join-space/<str:token>", AddUserToSpaceAPIView.as_view(), name="join_space"),
+    path("spaces/join-space/<str:token>", AddUserToSpaceAPIView.as_view(), name="join_space"),
+    path("join-space/<str:token>", RedirectAddUserToSpaceAPIView.as_view(), name="join_space_redirect"),
 ]

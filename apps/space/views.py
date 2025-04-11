@@ -110,7 +110,7 @@ class InviteUserAPIView(generics.CreateAPIView):
         )
 
 
-class AddUserToSpaceAPIView(APIView):
+class RedirectAddUserToSpaceAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
@@ -132,3 +132,25 @@ class AddUserToSpaceAPIView(APIView):
         return redirect(
             f"https://{org_slug_name}.spacedf.net/invitation?status=success"
         )
+
+
+class AddUserToSpaceAPIView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get("token")
+        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(token)
+        key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
+        if key_token not in cache.keys("invite_*"):
+            return Response({"error": "Invalid or expired invitation"}, status=400)
+
+        user_organization = OrganizationUser.objects.filter(
+            email=email_receiver
+        ).first()
+        if not user_organization:
+            return Response({"error": "User not found in organization"}, status=400)
+
+        space_role = SpaceRole.objects.get(id=space_role_id)
+        SpaceRoleUser.objects.get_or_create(
+            space_role=space_role, organization_user=user_organization
+        )
+        return Response({"result":"User added successfully"}, status=200)
