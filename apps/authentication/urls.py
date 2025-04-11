@@ -1,4 +1,4 @@
-from common.apps.oauth2.views import GoogleLoginView, GoogleLoginTokenView
+from common.apps.oauth2.views import GoogleLoginTokenView, GoogleLoginView
 from django.urls import include, path
 
 from apps.authentication.views import (
