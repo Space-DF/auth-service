@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models.signals import post_save
+from rest_framework.views import APIView
 from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -108,7 +109,7 @@ class InviteUserAPIView(generics.CreateAPIView):
         )
 
 
-class AddUserToSpaceAPIView(generics.RetrieveAPIView):
+class AddUserToSpaceAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
