@@ -101,7 +101,11 @@ class InviteUserAPIView(generics.CreateAPIView):
             message = render_email_format(
                 name_sender, receiver_email, space.name, invite_url
             )
-            cache.set(f"invite_{receiver_email}_{request.tenant.slug_name}_{space_slug_name}", token, timeout=604800)
+            cache.set(
+                f"invite_{receiver_email}_{request.tenant.slug_name}_{space_slug_name}",
+                token,
+                timeout=604800,
+            )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
             {"result": "Invitation sent successfully"},
@@ -109,14 +113,18 @@ class InviteUserAPIView(generics.CreateAPIView):
         )
 
 
-class AddUserToSpaceAPIView(APIView):
+class RedirectAddUserToSpaceAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
-        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(token)
+        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(
+            token
+        )
         key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if key_token not in cache.keys("invite_*"):
-            return redirect(f"https://{org_slug_name}.spacedf.net/invitation?status=failed")
+        if cache.get(key_token):
+            return redirect(
+                f"https://{org_slug_name}.spacedf.net/invitation?status=failed"
+            )
 
         user_organization = OrganizationUser.objects.filter(
             email=email_receiver
@@ -131,3 +139,27 @@ class AddUserToSpaceAPIView(APIView):
         return redirect(
             f"https://{org_slug_name}.spacedf.net/invitation?status=success"
         )
+
+
+class AddUserToSpaceAPIView(APIView):
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get("token")
+        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(
+            token
+        )
+        key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
+        if cache.get(key_token):
+            return Response({"error": "Invalid or expired invitation"}, status=400)
+
+        user_organization = OrganizationUser.objects.filter(
+            email=email_receiver
+        ).first()
+        if not user_organization:
+            return Response({"error": "User not found in organization"}, status=400)
+
+        space_role = SpaceRole.objects.get(id=space_role_id)
+        SpaceRoleUser.objects.get_or_create(
+            space_role=space_role, organization_user=user_organization
+        )
+        return Response({"result": "User added successfully"}, status=200)
