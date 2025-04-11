@@ -121,7 +121,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
             token
         )
         key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if cache.get(key_token):
+        if not cache.get(key_token):
             return redirect(
                 f"https://{org_slug_name}.spacedf.net/invitation?status=failed"
             )
@@ -149,7 +149,7 @@ class AddUserToSpaceAPIView(APIView):
             token
         )
         key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if cache.get(key_token):
+        if not cache.get(key_token):
             return Response({"error": "Invalid or expired invitation"}, status=400)
 
         user_organization = OrganizationUser.objects.filter(
