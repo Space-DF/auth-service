@@ -16,6 +16,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import decode_token, generate_token, render_email_format
@@ -108,7 +109,7 @@ class InviteUserAPIView(generics.CreateAPIView):
         )
 
 
-class AddUserToSpaceAPIView(generics.RetrieveAPIView):
+class AddUserToSpaceAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
