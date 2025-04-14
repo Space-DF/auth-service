@@ -15,7 +15,7 @@ urlpatterns = [
         SpaceView.as_view(),
     ),
     path(
-        "spaces/invitation/<str:slug_name>",
+        "spaces/invitation",
         InviteUserAPIView.as_view(),
         name="invitation",
     ),

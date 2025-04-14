@@ -17,6 +17,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ParseError
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import decode_token, generate_token, render_email_format
@@ -82,7 +83,9 @@ class InviteUserAPIView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         receiver_list = serializer.data.get("receiver_list")
-        space_slug_name = kwargs.get("slug_name")
+        space_slug_name = self.request.headers.get("X-Space", None)
+        if space_slug_name is None:
+            raise ParseError("X-Space header is required")
         space = get_object_or_404(Space, slug_name=space_slug_name)
         subject = "The invitation"
         name_sender = instance.first_name + " " + instance.last_name
