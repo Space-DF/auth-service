@@ -96,7 +96,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                 receiver_item.get("space_role_id"),
             )
             invite_url = request.build_absolute_uri(
-                reverse("space:join_space", kwargs={"token": token})
+                reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
                 name_sender, receiver_email, space.name, invite_url
