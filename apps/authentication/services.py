@@ -38,13 +38,11 @@ def generate_otp(length=6):
     return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
-def render_email_format(otp_code):
+def render_email_format(template, data):
     try:
         html_message = render_to_string(
-            "email_otp.html",
-            {
-                "otp_code": otp_code,
-            },
+            template,
+            data,
         )
         return html_message
     except Exception as e:
