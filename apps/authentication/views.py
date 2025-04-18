@@ -1,5 +1,4 @@
 from common.apps.organization_user.models import OrganizationUser
-from common.utils.encoder import encode_to_base64
 from common.utils.send_email import send_email
 from django.conf import settings
 from django.core.cache import cache
@@ -15,10 +14,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.authentication.serializers import (
     AuthTokenPairSerializer,
     ChangePasswordSerializer,
-    ForgetPasswordSerializer,
     ProfileSerializer,
     RegistrationSerializer,
-    SendEmailSerializer,
+    SendOTPSerializer,
 )
 from apps.authentication.services import (
     create_space_access_token,
@@ -85,7 +83,7 @@ class LoginAPIView(TokenObtainPairView):
 class SendOTPView(generics.GenericAPIView):
     """API View to send OTP for email verification"""
 
-    serializer_class = SendEmailSerializer
+    serializer_class = SendOTPSerializer
     permission_classes = [AllowAny]
     authentication_classes = []
 
@@ -95,69 +93,12 @@ class SendOTPView(generics.GenericAPIView):
             otp_code = generate_otp()
             email = serializer.validated_data["email"]
             subject = "Your One-Time Sign-In Code"
-            data = {
-                "otp_code": otp_code,
-            }
-            message = render_email_format("email_otp.html", data)
+            message = render_email_format(otp_code)
             send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
             cache.set(f"otp_{email}", otp_code, timeout=600)
             return Response({"message": "OTP sent successfully!"})
 
         return Response(serializer.errors, status=400)
-
-
-class SendEmailToConfirmView(generics.GenericAPIView):
-    serializer_class = SendEmailSerializer
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"]
-        subject = "Forget the password"
-        token = encode_to_base64({"email": email})
-        data = {
-            "token": token,
-            "slug_name": request.tenant.slug_name + ".",
-        }
-        message = render_email_format("email_forget_password.html", data)
-        send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
-        cache.set(f"email_forget_{email}", token, timeout=600)
-        return Response(
-            {
-                "result": "Please check your email to continue the password reset process"
-            },
-            status=status.HTTP_200_OK,
-        )
-
-
-class ForgetPasswordView(generics.GenericAPIView):
-    serializer_class = ForgetPasswordSerializer
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"]
-        if not cache.get(f"email_forget_{email}"):
-            return Response(
-                {
-                    "result": "Token expired or invalid. Please request a new password reset email."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        orgianization_user = OrganizationUser.objects.filter(email=email).first()
-        if orgianization_user:
-            orgianization_user.set_password(serializer.validated_data["password"])
-            orgianization_user.save()
-            cache.delete(f"email_forget_{email}")
-            return Response(
-                {"result": "The password changed successfully"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        return Response(
-            {"result": "The account for this email does not exist"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
 
 class ChangePasswordAPIView(generics.GenericAPIView):
