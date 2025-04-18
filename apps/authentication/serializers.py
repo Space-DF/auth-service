@@ -193,14 +193,9 @@ class AuthTokenPairSerializer(TokenPairSerializer):
     default_space = serializers.CharField()
 
 
-class SendEmailSerializer(serializers.Serializer):
+class SendOTPSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
 
 class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
     space_slug_name = serializers.CharField(write_only=True, allow_null=True)
-
-
-class ForgetPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
