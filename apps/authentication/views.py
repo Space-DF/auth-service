@@ -1,5 +1,7 @@
+from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
 from common.utils.encoder import encode_to_base64
+from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
 from django.conf import settings
 from django.core.cache import cache
@@ -24,6 +26,7 @@ from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
     generate_otp,
+    handle_space_access_token,
     render_email_format,
 )
 
@@ -80,6 +83,21 @@ class LoginAPIView(TokenObtainPairView):
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
         return super().post(request, *args, **kwargs)
+
+
+class GoogleLoginTokenView(generics.CreateAPIView):
+    serializer_class = CodeLoginSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        authorization_code = serializer.validated_data["authorization_code"]
+        access_token = get_access_token_with_code(authorization_code, provider="GOOGLE")
+        return handle_space_access_token(
+            request, access_token=access_token, provider="GOOGLE"
+        )
 
 
 class SendOTPView(generics.GenericAPIView):

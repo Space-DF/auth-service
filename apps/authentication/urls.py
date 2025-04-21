@@ -1,10 +1,11 @@
-from common.apps.oauth2.views import GoogleLoginTokenView, GoogleLoginView
+from common.apps.oauth2.views import GoogleLoginView
 from django.urls import include, path
 
 from apps.authentication.views import (
     ChangePasswordAPIView,
     CustomRefreshTokenAPIView,
     ForgetPasswordView,
+    GoogleLoginTokenView,
     LoginAPIView,
     ProfileAPIView,
     RegistrationAPIView,
