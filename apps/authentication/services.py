@@ -1,17 +1,17 @@
 import secrets
 import string
+from operator import itemgetter
+from typing import Literal
 
+import requests
+from common.apps.organization_user.models import OrganizationUser
 from common.apps.refresh_tokens.services import create_jwt_tokens
 from common.apps.space_role.models import SpacePolicy
-from django.template.loader import render_to_string
-from rest_framework.exceptions import ValidationError
-from typing import Literal
 from django.conf import settings
-import requests
-from rest_framework.response import Response
+from django.template.loader import render_to_string
 from rest_framework import status
-from operator import itemgetter
-from common.apps.organization_user.models import OrganizationUser
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 
 def create_space_access_token(space_slug_name, user_id, access_token):
@@ -63,7 +63,9 @@ def handle_space_access_token(request, access_token, provider: Literal["GOOGLE"]
 
     default_space_slug = f"default-{organization_user.id}"
 
-    refresh, access = create_space_jwt_tokens(organization_user, space_slug=default_space_slug, issuer=request.tenant)
+    refresh, access = create_space_jwt_tokens(
+        organization_user, space_slug=default_space_slug, issuer=request.tenant
+    )
     return Response(
         status=status.HTTP_200_OK, data={"refresh": str(refresh), "access": str(access)}
     )

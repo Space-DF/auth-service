@@ -5,12 +5,12 @@ from apps.authentication.views import (
     ChangePasswordAPIView,
     CustomRefreshTokenAPIView,
     ForgetPasswordView,
+    GoogleLoginTokenView,
     LoginAPIView,
     ProfileAPIView,
     RegistrationAPIView,
     SendEmailToConfirmView,
     SendOTPView,
-    GoogleLoginTokenView
 )
 
 urlpatterns = [
