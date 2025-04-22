@@ -129,6 +129,8 @@ class SendOTPView(generics.GenericAPIView):
 
 class SendEmailToConfirmView(generics.GenericAPIView):
     serializer_class = SendEmailSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -152,6 +154,8 @@ class SendEmailToConfirmView(generics.GenericAPIView):
 
 class ForgetPasswordView(generics.GenericAPIView):
     serializer_class = ForgetPasswordSerializer
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
