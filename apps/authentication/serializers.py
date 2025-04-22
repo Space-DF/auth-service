@@ -134,7 +134,10 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
         if hasattr(self.context["request"], "tenant"):
             tenant = self.context["request"].tenant
 
-        default_space = Space.objects.filter(created_by=self.user.id).first()
+        default_space = Space.objects.filter(
+            space_role__space_role_user__organization_user_id=self.user.id,
+            space_role__space_role_user__is_default=True,
+        ).first()
         default_space_slug = default_space.slug_name if default_space else None
         refresh_token, access_token = create_space_jwt_tokens(
             self.user, space_slug=default_space_slug, issuer=tenant

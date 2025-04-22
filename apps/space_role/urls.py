@@ -6,6 +6,7 @@ from apps.space_role.views import (
     ListSpaceRoleUserView,
     RetrieveDeleteSpaceRoleUserView,
     RetrieveSpacePolicyView,
+    SpaceRoleUserDefaultView,
     UpdateDeleteSpaceRoleView,
 )
 
@@ -31,6 +32,10 @@ urlpatterns = [
     path(
         "space-role-users",
         ListSpaceRoleUserView.as_view(),
+    ),
+    path(
+        "space-role-users/<str:id>/default",
+        SpaceRoleUserDefaultView.as_view(),
     ),
     path(
         "space-role-users/<str:id>",

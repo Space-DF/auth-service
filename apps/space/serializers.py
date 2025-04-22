@@ -6,6 +6,8 @@ from apps.upload_file.service import get_url
 
 
 class SpaceSerializer(serializers.ModelSerializer):
+    default_display = serializers.SerializerMethodField()
+
     class Meta:
         model = Space
         fields = "__all__"
@@ -13,6 +15,7 @@ class SpaceSerializer(serializers.ModelSerializer):
             "id": {"read_only": True},
             "total_devices": {"read_only": True},
             "is_active": {"read_only": True},
+            "is_default": {"read_only": True},
             "created_by": {"read_only": True},
             "created_at": {"read_only": True},
             "updated_at": {"read_only": True},
@@ -32,6 +35,16 @@ class SpaceSerializer(serializers.ModelSerializer):
                 instance.logo,
             )
         return data
+
+    def get_default_display(self, obj):
+        request = self.context.get("request")
+        user_id = request.headers.get("X-User-ID", None)
+        if not user_id:
+            return False
+        return obj.space_role.filter(
+            space_role_user__organization_user_id=user_id,
+            space_role_user__is_default=True,
+        ).exists()
 
 
 class ReceiverSerializer(serializers.Serializer):

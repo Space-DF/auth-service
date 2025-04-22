@@ -57,6 +57,30 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.is_default:
+            return Response(
+                {"detail": "Cannot delete default Space"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_ids = OrganizationUser.objects.filter(
+            space_role_user__space_role__space_id=instance.id,
+            space_role_user__is_default=True,
+        ).values_list("id", flat=True)
+
+        space_ids = Space.objects.filter(
+            created_by__in=user_ids, is_default=True
+        ).values_list("id", flat=True)
+
+        SpaceRoleUser.objects.filter(
+            organization_user_id__in=user_ids, space_role__space_id__in=space_ids
+        ).update(is_default=True)
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 @receiver(post_save, sender=OrganizationUser)
 def create_default_space(sender, instance, created, **kwargs):
@@ -65,6 +89,7 @@ def create_default_space(sender, instance, created, **kwargs):
             name="Default",
             slug_name=f"default-{instance.id}",
             created_by=instance.id,
+            is_default=True,
         ).save()
 
 
