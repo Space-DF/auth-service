@@ -202,5 +202,5 @@ class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
 
 
 class ForgetPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    token = serializers.CharField()
     password = serializers.CharField()
