@@ -22,6 +22,7 @@ from apps.space_role.serializers import (
     SpaceRoleUserUpdateSerializer,
 )
 from apps.space_role.services import create_space_default_role
+from django.db.models import Case, When, BooleanField
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -115,11 +116,14 @@ class SpaceRoleUserDefaultView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         SpaceRoleUser.objects.filter(
-            organization_user_id=user_id, is_default=True
-        ).update(is_default=False)
-        SpaceRoleUser.objects.filter(
-            organization_user_id=user_id, space_role__space_id=instance.id
-        ).update(is_default=True)
+            organization_user_id=user_id
+        ).update(
+            is_default=Case(
+                When(space_role__space_id=instance.id, then=True),
+                default=False,
+                output_field=BooleanField()
+            )
+        )
         return Response(
             {"result": "Set default for Space successful"}, status=status.HTTP_200_OK
         )
