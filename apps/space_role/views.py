@@ -9,8 +9,11 @@ from common.views.space import (
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.space_role.serializers import (
     SpacePolicySerializer,
@@ -19,6 +22,7 @@ from apps.space_role.serializers import (
     SpaceRoleUserUpdateSerializer,
 )
 from apps.space_role.services import create_space_default_role
+from django.db.models import Case, When, BooleanField
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -90,6 +94,36 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
 def handle_new_space(sender, instance, created, **kwargs):
     if created:
         owner_role, _ = create_space_default_role(instance)
-        SpaceRoleUser(
-            organization_user_id=instance.created_by, space_role=owner_role
-        ).save()
+        has_any_space = SpaceRoleUser.objects.filter(
+            organization_user_id=instance.created_by
+        ).exists()
+
+        SpaceRoleUser.objects.create(
+            organization_user_id=instance.created_by,
+            space_role=owner_role,
+            is_default=not has_any_space,
+        )
+
+
+class SpaceRoleUserDefaultView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        instance = get_object_or_404(Space, id=kwargs.get("id"))
+        user_id = request.headers.get("X-User-ID", None)
+        if not user_id:
+            return Response(
+                {"error": "X-User-ID header missing."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        SpaceRoleUser.objects.filter(
+            organization_user_id=user_id
+        ).update(
+            is_default=Case(
+                When(space_role__space_id=instance.id, then=True),
+                default=False,
+                output_field=BooleanField()
+            )
+        )
+        return Response(
+            {"result": "Set default for Space successful"}, status=status.HTTP_200_OK
+        )
