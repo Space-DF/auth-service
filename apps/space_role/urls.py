@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.space_role.views import (
     ListCreateSpaceRoleView,
+    ListSpaceInvitationView,
     ListSpacePolicyView,
     ListSpaceRoleUserView,
     RetrieveDeleteSpaceRoleUserView,
@@ -40,5 +41,9 @@ urlpatterns = [
     path(
         "space-role-users/<str:id>",
         RetrieveDeleteSpaceRoleUserView.as_view(),
+    ),
+    path(
+        "space-participants",
+        ListSpaceInvitationView.as_view(),
     ),
 ]

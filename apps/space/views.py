@@ -1,16 +1,16 @@
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
-from common.apps.space_role.models import SpaceRole, SpaceRoleUser
+from common.apps.space_role.models import SpaceInvitation, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
 from common.utils.send_email import send_email
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
 from django.conf import settings
-from django.core.cache import cache
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, ParseError
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -106,37 +106,75 @@ class InviteUserAPIView(generics.CreateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        receiver_list = serializer.data.get("receiver_list")
-        space_slug_name = self.request.headers.get("X-Space", None)
+        receiver_list = serializer.validated_data.get("receiver_list")
+        space_slug_name = request.headers.get("X-Space", None)
         if space_slug_name is None:
             raise ParseError("X-Space header is required")
         space = get_object_or_404(Space, slug_name=space_slug_name)
+        invited_by = instance
         subject = "The invitation"
-        name_sender = instance.first_name + " " + instance.last_name
+        name_sender = f"{instance.first_name} {instance.last_name}"
+
+        email_data = []
+        all_invitations_old = SpaceInvitation.objects.filter(
+            email__in=[r["email"] for r in receiver_list],
+            space_role_user__space_role__space=space,
+        ).select_related("space_role_user")
+
+        invitation_lookup = {inv.email: inv for inv in all_invitations_old}
 
         for receiver_item in receiver_list:
-            receiver_email = receiver_item.get("email")
-            token = generate_token(
-                receiver_email,
-                request.tenant.slug_name,
-                space_slug_name,
-                receiver_item.get("space_role_id"),
-            )
+            receiver_email = receiver_item["email"]
+            space_role_id = receiver_item["space_role_id"]
+            invitation = invitation_lookup.get(receiver_email)
+
+            if invitation:
+                if invitation.status != "accepted":
+                    if invitation.space_role_user.space_role_id != space_role_id:
+                        invitation.space_role_user.space_role_id = space_role_id
+                        invitation.space_role_user.save()
+
+                    token = generate_token(
+                        receiver_email,
+                        request.tenant.slug_name,
+                        invitation.space_role_user.id,
+                    )
+                    invitation.token = token
+                    invitation.status = "pending"
+                    invitation.save()
+            else:
+                organization_user = OrganizationUser.objects.filter(
+                    email=receiver_email
+                ).first()
+                space_role_user = SpaceRoleUser.objects.create(
+                    space_role_id=space_role_id, organization_user=organization_user
+                )
+                token = generate_token(
+                    receiver_email, request.tenant.slug_name, space_role_user.id
+                )
+                SpaceInvitation.objects.create(
+                    space_role_user=space_role_user,
+                    invited_by=invited_by,
+                    email=receiver_email,
+                    token=token,
+                    status="pending",
+                )
+
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
                 name_sender, receiver_email, space.name, invite_url
             )
-            cache.set(
-                f"invite_{receiver_email}_{request.tenant.slug_name}_{space_slug_name}",
-                token,
-                timeout=604800,
+            email_data.append({"to": receiver_email, "message": message})
+
+        for item in email_data:
+            send_email(
+                settings.DEFAULT_FROM_EMAIL, [item["to"]], subject, item["message"]
             )
-            send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
+
         return Response(
-            {"result": "Invitation sent successfully"},
-            status=status.HTTP_200_OK,
+            {"result": "Invitation sent successfully"}, status=status.HTTP_200_OK
         )
 
 
@@ -144,25 +182,31 @@ class RedirectAddUserToSpaceAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
-        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(
-            token
-        )
-        key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if not cache.get(key_token):
+        email_receiver, org_slug_name, space_role_user_id = decode_token(token)
+        space_invatation = SpaceInvitation.objects.filter(
+            space_role_user_id=space_role_user_id
+        ).first()
+        if space_invatation.is_token_expired():
+            space_invatation.status = "expired"
+            space_invatation.save()
             return redirect(
                 f"https://{org_slug_name}.spacedf.net/invitation?status=failed"
             )
 
-        user_organization = OrganizationUser.objects.filter(
+        organization_user = OrganizationUser.objects.filter(
             email=email_receiver
         ).first()
-        if not user_organization:
+        if not organization_user:
             return redirect(f"https://{org_slug_name}.spacedf.net?token={token}")
 
-        space_role = SpaceRole.objects.get(id=space_role_id)
-        SpaceRoleUser.objects.get_or_create(
-            space_role=space_role, organization_user=user_organization
-        )
+        space_role_user = SpaceRoleUser.objects.get(id=space_role_user_id)
+        if space_role_user.organization_user is None:
+            space_role_user.organization_user = organization_user
+            space_role_user.save()
+
+        space_invatation.status = "accepted"
+        space_invatation.accepted_at = timezone.now()
+        space_invatation.save()
         return redirect(
             f"https://{org_slug_name}.spacedf.net/invitation?status=success"
         )
@@ -172,21 +216,27 @@ class AddUserToSpaceAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
-        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(
-            token
-        )
-        key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if not cache.get(key_token):
+        email_receiver, _, space_role_user_id = decode_token(token)
+        space_invatation = SpaceInvitation.objects.filter(
+            space_role_user_id=space_role_user_id
+        ).first()
+        if space_invatation.is_token_expired():
+            space_invatation.status = "expired"
+            space_invatation.save()
             return Response({"error": "Invalid or expired invitation"}, status=400)
 
-        user_organization = OrganizationUser.objects.filter(
+        organization_user = OrganizationUser.objects.filter(
             email=email_receiver
         ).first()
-        if not user_organization:
+        if not organization_user:
             return Response({"error": "User not found in organization"}, status=400)
 
-        space_role = SpaceRole.objects.get(id=space_role_id)
-        SpaceRoleUser.objects.get_or_create(
-            space_role=space_role, organization_user=user_organization
-        )
+        space_role_user = SpaceRoleUser.objects.get(id=space_role_user_id)
+        if space_role_user.organization_user is None:
+            space_role_user.organization_user = organization_user
+            space_role_user.save()
+
+        space_invatation.status = "accepted"
+        space_invatation.accepted_at = timezone.now()
+        space_invatation.save()
         return Response({"result": "User added successfully"}, status=200)

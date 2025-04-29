@@ -1,5 +1,10 @@
 from common.apps.space.models import Space
-from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
+from common.apps.space_role.models import (
+    SpaceInvitation,
+    SpacePolicy,
+    SpaceRole,
+    SpaceRoleUser,
+)
 from common.pagination.base_pagination import BasePagination
 from common.views.space import (
     SpaceListAPIView,
@@ -7,22 +12,24 @@ from common.views.space import (
     SpaceRetrieveUpdateDestroyAPIView,
 )
 from django.db import transaction
+from django.db.models import BooleanField, Case, When
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from rest_framework import status
+from rest_framework import generics, status
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView, get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.space_role.serializers import (
+    SpaceInvatationSerializer,
     SpacePolicySerializer,
     SpaceRoleSerializer,
     SpaceRoleUserSerializer,
     SpaceRoleUserUpdateSerializer,
 )
 from apps.space_role.services import create_space_default_role
-from django.db.models import Case, When, BooleanField
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -115,15 +122,36 @@ class SpaceRoleUserDefaultView(APIView):
                 {"error": "X-User-ID header missing."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        SpaceRoleUser.objects.filter(
-            organization_user_id=user_id
-        ).update(
+        space_role = SpaceRole.objects.filter(space_id=instance.id)
+        SpaceRoleUser.objects.filter(organization_user_id=user_id).update(
             is_default=Case(
-                When(space_role__space_id=instance.id, then=True),
+                When(space_role__in=space_role, then=True),
                 default=False,
-                output_field=BooleanField()
+                output_field=BooleanField(),
             )
         )
         return Response(
             {"result": "Set default for Space successful"}, status=status.HTTP_200_OK
         )
+
+
+class ListSpaceInvitationView(generics.ListAPIView):
+    model = SpaceInvitation
+    serializer_class = SpaceInvatationSerializer
+    pagination_class = BasePagination
+    filter_backends = [OrderingFilter, SearchFilter]
+    ordering_fields = ["created_at"]
+    search_fields = ["email", "status"]
+
+    def get_queryset(self):
+        user_id = self.request.headers.get("X-User-ID")
+        space_slug_name = self.request.headers.get("X-Space")
+        if user_id is None:
+            raise NotFound("The user not found")
+        spaceInvitation = SpaceInvitation.objects.select_related(
+            "space_role_user"
+        ).filter(
+            invited_by_id=user_id,
+            space_role_user__space_role__space__slug_name=space_slug_name,
+        )
+        return spaceInvitation

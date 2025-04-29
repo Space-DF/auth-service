@@ -1,4 +1,9 @@
-from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
+from common.apps.space_role.models import (
+    SpaceInvitation,
+    SpacePolicy,
+    SpaceRole,
+    SpaceRoleUser,
+)
 from rest_framework import serializers
 
 from apps.authentication.serializers import ProfileSerializer
@@ -34,6 +39,27 @@ class SpaceRoleUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpaceRoleUser
         fields = "__all__"
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "created_at": {"read_only": True},
+            "updated_at": {"read_only": True},
+        }
+
+
+class SpaceInvatationSerializer(serializers.ModelSerializer):
+    space_role_user = SpaceRoleUserSerializer(read_only=True)
+
+    class Meta:
+        model = SpaceInvitation
+        fields = [
+            "id",
+            "space_role_user",
+            "created_at",
+            "updated_at",
+            "email",
+            "status",
+            "accepted_at",
+        ]
         extra_kwargs = {
             "id": {"read_only": True},
             "created_at": {"read_only": True},
