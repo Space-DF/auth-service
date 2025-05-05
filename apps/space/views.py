@@ -7,7 +7,7 @@ from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestro
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import decode_token, generate_token, render_email_format
+from apps.space_role.services import clear_user_permission_cache
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -91,6 +92,12 @@ def create_default_space(sender, instance, created, **kwargs):
             created_by=instance.id,
             is_default=True,
         ).save()
+
+
+@receiver(post_delete, sender=Space)
+def handle_post_delete(sender, instance, **kwargs):
+    user_id = getattr(instance, "created_by", None)
+    clear_user_permission_cache(user_id)
 
 
 class InviteUserAPIView(generics.CreateAPIView):

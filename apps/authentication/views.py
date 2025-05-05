@@ -63,14 +63,11 @@ class RegistrationAPIView(generics.GenericAPIView):
 
 class CustomRefreshTokenAPIView(TokenRefreshView):
     authentication_classes = []
-    _serializer_class = "apps.authentication.serializers.SpaceTokenRefreshSerializer"
+    _serializer_class = "apps.authentication.serializers.CustomTokenRefreshSerializer"
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        space_slug = self.request.data.get("space_slug_name")
-        params = {
-            "space_slug_name": space_slug,
-        }
+        params = {}
         return {
             **context,
             "access_token_handler": create_space_access_token,
