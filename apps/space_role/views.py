@@ -7,7 +7,8 @@ from common.views.space import (
     SpaceRetrieveUpdateDestroyAPIView,
 )
 from django.db import transaction
-from django.db.models.signals import post_save
+from django.db.models import BooleanField, Case, When
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -21,8 +22,10 @@ from apps.space_role.serializers import (
     SpaceRoleUserSerializer,
     SpaceRoleUserUpdateSerializer,
 )
-from apps.space_role.services import create_space_default_role
-from django.db.models import Case, When, BooleanField
+from apps.space_role.services import (
+    clear_user_permission_cache,
+    create_space_default_role,
+)
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -115,15 +118,25 @@ class SpaceRoleUserDefaultView(APIView):
                 {"error": "X-User-ID header missing."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        SpaceRoleUser.objects.filter(
-            organization_user_id=user_id
-        ).update(
+        SpaceRoleUser.objects.filter(organization_user_id=user_id).update(
             is_default=Case(
                 When(space_role__space_id=instance.id, then=True),
                 default=False,
-                output_field=BooleanField()
+                output_field=BooleanField(),
             )
         )
         return Response(
             {"result": "Set default for Space successful"}, status=status.HTTP_200_OK
         )
+
+
+@receiver(post_save, sender=SpaceRoleUser)
+def handle_post_save(sender, instance, created, **kwargs):
+    user_id = getattr(instance, "organization_user_id", None)
+    clear_user_permission_cache(user_id)
+
+
+@receiver(post_delete, sender=SpaceRoleUser)
+def handle_post_delete(sender, instance, **kwargs):
+    user_id = getattr(instance, "organization_user_id", None)
+    clear_user_permission_cache(user_id)
