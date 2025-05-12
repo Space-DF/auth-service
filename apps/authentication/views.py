@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
+from common.permissions.permission_classes import HasChangePermission
 from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
 from common.utils.token_jwt import generate_token
@@ -195,6 +196,7 @@ class ForgetPasswordView(generics.GenericAPIView):
 
 class ChangePasswordAPIView(generics.GenericAPIView):
     serializer_class = ChangePasswordSerializer
+    permission_classes = [HasChangePermission]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)
@@ -214,6 +216,7 @@ class ChangePasswordAPIView(generics.GenericAPIView):
 class ProfileAPIView(generics.RetrieveAPIView):
     queryset = OrganizationUser.objects.all()
     serializer_class = ProfileSerializer
+    permission_classes = [HasChangePermission]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)

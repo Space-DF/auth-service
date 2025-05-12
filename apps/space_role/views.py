@@ -1,6 +1,7 @@
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
+from common.permissions.permission_classes import HasChangePermission
 from common.views.space import (
     SpaceListAPIView,
     SpaceListCreateAPIView,
@@ -37,6 +38,7 @@ class ListCreateSpaceRoleView(SpaceListCreateAPIView):
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["created_at"]
     search_fields = ["name"]
+    permission_classes = [HasChangePermission]
 
 
 class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
@@ -45,6 +47,7 @@ class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
     lookup_field = "id"
     queryset = SpaceRole.objects.all()
     space_field = "space"
+    permission_classes = [HasChangePermission]
 
 
 class ListSpacePolicyView(ListAPIView):
@@ -55,6 +58,7 @@ class ListSpacePolicyView(ListAPIView):
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["name"]
     search_fields = ["name"]
+    permission_classes = [HasChangePermission]
 
 
 class RetrieveSpacePolicyView(RetrieveAPIView):
@@ -62,6 +66,7 @@ class RetrieveSpacePolicyView(RetrieveAPIView):
     serializer_class = SpacePolicySerializer
     lookup_field = "id"
     queryset = SpacePolicy.objects.all()
+    permission_classes = [HasChangePermission]
 
 
 class ListSpaceRoleUserView(SpaceListAPIView):
@@ -77,6 +82,7 @@ class ListSpaceRoleUserView(SpaceListAPIView):
         "organization_user__last_name",
         "organization_user__email",
     ]
+    permission_classes = [HasChangePermission]
 
 
 class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
@@ -85,6 +91,7 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
     lookup_field = "id"
     queryset = SpaceRoleUser.objects.select_related("space_role", "organization_user")
     space_field = "space_role__space"
+    permission_classes = [HasChangePermission]
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -109,6 +116,7 @@ def handle_new_space(sender, instance, created, **kwargs):
 
 
 class SpaceRoleUserDefaultView(APIView):
+    permission_classes = [HasChangePermission]
 
     def post(self, request, *args, **kwargs):
         instance = get_object_or_404(Space, id=kwargs.get("id"))

@@ -2,6 +2,7 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
+from common.permissions.permission_classes import HasChangePermission
 from common.utils.send_email import send_email
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
 from django.conf import settings
@@ -31,6 +32,7 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["created_at"]
     search_fields = ["name"]
+    permission_classes = [HasChangePermission]
 
     def get_object(self):
         space_slug = self.request.headers.get("X-Space", None)
@@ -102,6 +104,7 @@ def handle_post_delete(sender, instance, **kwargs):
 
 class InviteUserAPIView(generics.CreateAPIView):
     serializer_class = InviteUserSerial
+    permission_classes = [HasChangePermission]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)
@@ -148,6 +151,7 @@ class InviteUserAPIView(generics.CreateAPIView):
 
 
 class RedirectAddUserToSpaceAPIView(APIView):
+    permission_classes = [HasChangePermission]
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
@@ -176,6 +180,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
 
 
 class AddUserToSpaceAPIView(APIView):
+    permission_classes = [HasChangePermission]
 
     def get(self, request, *args, **kwargs):
         token = kwargs.get("token")
