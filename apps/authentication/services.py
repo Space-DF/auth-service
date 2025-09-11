@@ -88,7 +88,12 @@ def handle_space_access_token(request, access_token, provider: Literal["GOOGLE"]
         organization_user, space_slug=default_space_slug, issuer=request.tenant
     )
     return Response(
-        status=status.HTTP_200_OK, data={"refresh": str(refresh), "access": str(access)}
+        status=status.HTTP_200_OK,
+        data={
+            "refresh": str(refresh),
+            "access": str(access),
+            "default_space": default_space_slug,
+        },
     )
 
 
