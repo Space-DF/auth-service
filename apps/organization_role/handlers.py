@@ -12,5 +12,6 @@ class NewOrganizationHandler(NewOrganizationHandlerBase):
         )
         with tenant_context(organization):
             # Create owner user
-            owner = OrganizationUser(email=self._owner_email, is_owner=True)
+            owner = OrganizationUser(email=self._owner.get("email"), is_owner=True)
+            owner.password = self._owner.get("password")
             owner.save()
