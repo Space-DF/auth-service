@@ -109,7 +109,6 @@ def handle_new_space(sender, instance, created, **kwargs):
 
 
 class SpaceRoleUserDefaultView(APIView):
-
     def post(self, request, *args, **kwargs):
         instance = get_object_or_404(Space, id=kwargs.get("id"))
         user_id = request.headers.get("X-User-ID", None)

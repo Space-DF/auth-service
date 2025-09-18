@@ -146,7 +146,6 @@ class InviteUserAPIView(generics.CreateAPIView):
 
 
 class RedirectAddUserToSpaceAPIView(APIView):
-
     def get(self, request, *args, **kwargs):
         token_str = kwargs.get("token")
         org_slug_name = ""
@@ -166,7 +165,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
         user_organization = OrganizationUser.objects.filter(
             email=email_receiver
         ).first()
-        
+
         if not user_organization:
             return redirect(f"https://{org_slug_name}.spacedf.net?token={token}")
 
@@ -180,7 +179,6 @@ class RedirectAddUserToSpaceAPIView(APIView):
 
 
 class AddUserToSpaceAPIView(APIView):
-
     def get(self, request, *args, **kwargs):
         token_str = kwargs.get("token")
         try:
