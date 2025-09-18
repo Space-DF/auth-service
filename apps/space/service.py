@@ -1,37 +1,7 @@
 import base64
-import json
-import secrets
 
 from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
-
-
-def generate_token(email_receiver, org_slug_name, space_slug_name, space_role_id):
-    salt = secrets.token_hex(16)
-    data = json.dumps(
-        {
-            "email_receiver": email_receiver,
-            "space_slug_name": space_slug_name,
-            "org_slug_name": org_slug_name,
-            "space_role_id": space_role_id,
-            "salt": salt,
-        }
-    )
-    token = base64.b64encode(data.encode()).decode()
-    return token
-
-
-def decode_token(token):
-    try:
-        data = json.loads(base64.b64decode(token).decode())
-        return (
-            data.get("space_slug_name"),
-            data.get("email_receiver"),
-            data.get("org_slug_name"),
-            data.get("space_role_id"),
-        )
-    except Exception:
-        return None, None, None, None
 
 
 def encode_image_to_base64(image_path):

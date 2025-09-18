@@ -3,9 +3,9 @@ from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
 from common.utils.send_email import send_email
+from common.utils.token_jwt import generate_token
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
 from django.conf import settings
-from django.core.cache import cache
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -17,9 +17,10 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
-from apps.space.service import decode_token, generate_token, render_email_format
+from apps.space.service import render_email_format
 from apps.space_role.services import clear_user_permission_cache
 
 
@@ -124,21 +125,18 @@ class InviteUserAPIView(generics.CreateAPIView):
         for receiver_item in receiver_list:
             receiver_email = receiver_item.get("email")
             token = generate_token(
-                receiver_email,
-                request.tenant.slug_name,
-                space_slug_name,
-                receiver_item.get("space_role_id"),
+                {
+                    "email_receiver": receiver_email,
+                    "org_slug_name": request.tenant.slug_name,
+                    "space_role_id": receiver_item.get("space_role_id"),
+                },
+                10080,
             )
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
                 name_sender, receiver_email, space.name, invite_url
-            )
-            cache.set(
-                f"invite_{receiver_email}_{request.tenant.slug_name}_{space_slug_name}",
-                token,
-                timeout=604800,
             )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
@@ -148,21 +146,26 @@ class InviteUserAPIView(generics.CreateAPIView):
 
 
 class RedirectAddUserToSpaceAPIView(APIView):
-
     def get(self, request, *args, **kwargs):
-        token = kwargs.get("token")
-        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(
-            token
-        )
-        key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if not cache.get(key_token):
+        token_str = kwargs.get("token")
+        org_slug_name = ""
+        try:
+            org_slug_name = UntypedToken(token_str, verify=False).payload.get(
+                "org_slug_name"
+            )
+            token = AccessToken(token_str)
+        except Exception:
             return redirect(
                 f"https://{org_slug_name}.spacedf.net/invitation?status=failed"
             )
 
+        email_receiver = token.get("email_receiver")
+        space_role_id = token.get("space_role_id")
+
         user_organization = OrganizationUser.objects.filter(
             email=email_receiver
         ).first()
+
         if not user_organization:
             return redirect(f"https://{org_slug_name}.spacedf.net?token={token}")
 
@@ -176,19 +179,20 @@ class RedirectAddUserToSpaceAPIView(APIView):
 
 
 class AddUserToSpaceAPIView(APIView):
-
     def get(self, request, *args, **kwargs):
-        token = kwargs.get("token")
-        space_slug_name, email_receiver, org_slug_name, space_role_id = decode_token(
-            token
-        )
-        key_token = f"invite_{email_receiver}_{org_slug_name}_{space_slug_name}"
-        if not cache.get(key_token):
+        token_str = kwargs.get("token")
+        try:
+            token = AccessToken(token_str)
+        except Exception:
             return Response({"error": "Invalid or expired invitation"}, status=400)
+
+        email_receiver = token.get("email_receiver")
+        space_role_id = token.get("space_role_id")
 
         user_organization = OrganizationUser.objects.filter(
             email=email_receiver
         ).first()
+
         if not user_organization:
             return Response({"error": "User not found in organization"}, status=400)
 
