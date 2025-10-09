@@ -2,7 +2,7 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRoleUser
 from django.conf import settings
-from django.db.models import Case, CharField, Count, F, OuterRef, Value, When
+from django.db.models import Case, CharField, Count, F, Value, When
 from django.db.models.functions import Coalesce, Concat, Length, Trim
 from rest_framework import serializers
 
