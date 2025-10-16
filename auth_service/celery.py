@@ -28,18 +28,26 @@ setup_organization_task_routing()
 setup_synchronous_model_task_routing()
 
 app.autodiscover_tasks(settings.CELERY_TASKS)
-app.conf.task_queues = app.conf.task_queues + (
-    Queue(
-        constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION,
-        exchange=Exchange(
-            constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION, type="direct"
-        ),
-        routing_key=f"spacedf.tasks.{constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION}",
-    ),
-)
-app.conf.task_routes[
-    f"spacedf.tasks.{constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION}"
-] = {
-    "queue": constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION,
-    "routing_key": f"spacedf.tasks.{constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION}",
-}
+
+TASKS_AUTH = [
+    constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION,
+    constants.AUTH_SERVICE_ADD_OR_REMOVE_DEVICE,
+]
+
+existing = {queue.name: queue for queue in (app.conf.task_queues or ())}
+routes = dict(app.conf.task_routes or {})
+
+for name in TASKS_AUTH:
+    if name not in existing:
+        existing[name] = Queue(
+            name,
+            exchange=Exchange(name, type="direct"),
+            routing_key=f"spacedf.tasks.{name}",
+        )
+    routes[f"spacedf.tasks.{name}"] = {
+        "queue": name,
+        "routing_key": f"spacedf.tasks.{name}",
+    }
+
+app.conf.task_queues = tuple(existing.values())
+app.conf.task_routes = routes
