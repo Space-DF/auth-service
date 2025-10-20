@@ -6,7 +6,7 @@ from django.db.models import Case, CharField, Count, F, Value, When
 from django.db.models.functions import Coalesce, Concat, Length, Trim
 from rest_framework import serializers
 
-from apps.upload_file.service import get_url
+from apps.upload_file.service import get_presigned_url
 
 
 class SpaceSerializer(serializers.ModelSerializer):
@@ -33,10 +33,9 @@ class SpaceSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.logo:
-            data["logo"] = get_url(
+            data["logo"] = get_presigned_url(
                 settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                settings.AWS_S3.get("AWS_REGION"),
-                instance.logo,
+                f"uploads/{instance.logo}.png",
             )
 
         created_by = (

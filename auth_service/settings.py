@@ -55,6 +55,7 @@ TENANT_APPS = [
     "allauth.headless",
     "apps.spacedf_provider",
     "allauth.socialaccount",
+    "apps.upload_file",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
