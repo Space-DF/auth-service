@@ -11,7 +11,7 @@ from django.core.cache import cache
 from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
-from apps.upload_file.service import get_url
+from apps.upload_file.service import get_presigned_url
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -120,10 +120,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.avatar:
-            data["avatar"] = get_url(
+            data["avatar"] = get_presigned_url(
                 settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                settings.AWS_S3.get("AWS_REGION"),
-                instance.avatar,
+                f"uploads/{instance.avatar}.png",
             )
         return data
 
