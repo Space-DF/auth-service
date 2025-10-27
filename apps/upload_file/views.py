@@ -3,12 +3,12 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.upload_file.service import get_presigned_url, post_presigned_url
+from apps.upload_file.service import get_presigned_url, put_presigned_url
 
 
-class PostPresignedURL(APIView):
+class PutPresignedURL(APIView):
     def get(self, request):
-        data = post_presigned_url(settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"))
+        data = put_presigned_url(settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"))
         if data is not None:
             return Response(data, status=status.HTTP_200_OK)
 
