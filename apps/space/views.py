@@ -7,8 +7,6 @@ from common.utils.token_jwt import generate_token
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
 from django.conf import settings
 from django.db import transaction
-from django.db.models.signals import post_delete, post_save
-from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
 from rest_framework import generics, status
@@ -21,7 +19,6 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import render_email_format
-from apps.space_role.services import clear_user_permission_cache
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -82,23 +79,6 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@receiver(post_save, sender=OrganizationUser)
-def create_default_space(sender, instance, created, **kwargs):
-    if created:
-        Space(
-            name="Default",
-            slug_name=f"default-{instance.id}",
-            created_by=instance.id,
-            is_default=True,
-        ).save()
-
-
-@receiver(post_delete, sender=Space)
-def handle_post_delete(sender, instance, **kwargs):
-    user_id = getattr(instance, "created_by", None)
-    clear_user_permission_cache(user_id)
 
 
 class InviteUserAPIView(generics.CreateAPIView):
