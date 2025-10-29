@@ -139,7 +139,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
                 sub_host = update_subdomain(settings.HOST_FRONTEND, org_slug_name)
             token = AccessToken(token_str)
         except Exception:
-            return redirect(f"{sub_host}invitation?status=failed")
+            return redirect(f"{sub_host}/invitation?status=failed")
 
         email_receiver = token.get("email_receiver")
         space_role_id = token.get("space_role_id")
@@ -149,7 +149,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
         ).first()
 
         if not user_organization:
-            return redirect(f"{sub_host}?token={token}")
+            return redirect(f"{sub_host}/?token={token}")
 
         space_role = SpaceRole.objects.get(id=space_role_id)
         SpaceRoleUser.objects.get_or_create(
