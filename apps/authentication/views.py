@@ -4,6 +4,7 @@ from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
 from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
+from common.utils.subdomain import update_subdomain
 from common.utils.token_jwt import generate_token
 from django.conf import settings
 from django.core.cache import cache
@@ -135,9 +136,11 @@ class SendEmailToConfirmView(generics.GenericAPIView):
         email = serializer.validated_data["email"]
         subject = "Forget the password"
         token = generate_token({"email": email})
+        sub_host = update_subdomain(settings.HOST_FRONTEND, request.tenant.slug_name)
         data = {
             "token": token,
-            "slug_name": request.tenant.slug_name + ".",
+            "sub_host": sub_host,
+            "host": settings.HOST,
         }
         message = render_email_format("email_forget_password.html", data)
         send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)

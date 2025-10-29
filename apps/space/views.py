@@ -3,6 +3,7 @@ from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
 from common.utils.send_email import send_email
+from common.utils.subdomain import update_subdomain
 from common.utils.token_jwt import generate_token
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
 from django.conf import settings
@@ -129,15 +130,16 @@ class RedirectAddUserToSpaceAPIView(APIView):
     def get(self, request, *args, **kwargs):
         token_str = kwargs.get("token")
         org_slug_name = ""
+        sub_host = settings.HOST_FRONTEND
         try:
             org_slug_name = UntypedToken(token_str, verify=False).payload.get(
                 "org_slug_name"
             )
+            if org_slug_name:
+                sub_host = update_subdomain(settings.HOST_FRONTEND, org_slug_name)
             token = AccessToken(token_str)
         except Exception:
-            return redirect(
-                f"https://{org_slug_name}.spacedf.net/invitation?status=failed"
-            )
+            return redirect(f"{sub_host}/invitation?status=failed")
 
         email_receiver = token.get("email_receiver")
         space_role_id = token.get("space_role_id")
@@ -147,15 +149,13 @@ class RedirectAddUserToSpaceAPIView(APIView):
         ).first()
 
         if not user_organization:
-            return redirect(f"https://{org_slug_name}.spacedf.net?token={token}")
+            return redirect(f"{sub_host}/?token={token}")
 
         space_role = SpaceRole.objects.get(id=space_role_id)
         SpaceRoleUser.objects.get_or_create(
             space_role=space_role, organization_user=user_organization
         )
-        return redirect(
-            f"https://{org_slug_name}.spacedf.net/invitation?status=success"
-        )
+        return redirect(f"{sub_host}/invitation?status=success")
 
 
 class AddUserToSpaceAPIView(APIView):

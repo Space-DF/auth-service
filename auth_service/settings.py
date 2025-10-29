@@ -22,7 +22,8 @@ SECRET_KEY = os.getenv(
 )  # noqa
 DEBUG = os.getenv("ENV", default="dev") == "dev"  # noqa
 ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS", "*")]  # noqa
-HOST = os.getenv("HOST", "http://localhost:8000/")  # noqa
+HOST = os.getenv("HOST", "http://localhost:8000")  # noqa
+HOST_FRONTEND = os.getenv("HOST_FRONTEND", "http://localhost:3000")  # noqa
 DEFAULT_TENANT_HOST = os.getenv("DEFAULT_TENANT_HOST", "localhost")  # noqa
 
 # Application definition
