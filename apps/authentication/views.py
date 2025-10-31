@@ -161,7 +161,7 @@ class ForgetPasswordView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token_str = serializer.validated_data["token"]
-        if cache.get(f"used_token:{token_str}"):
+        if cache.get(f"used_token:{token_str}"):  # noqa: E231
             return Response(
                 {"error": "This token has already been used"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -178,7 +178,9 @@ class ForgetPasswordView(generics.GenericAPIView):
                 exp_timestamp = token.get("exp")
                 exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
                 ttl_seconds = int((exp_datetime - token.current_time).total_seconds())
-                cache.set(f"used_token:{token_str}", True, timeout=ttl_seconds)
+                cache.set(
+                    f"used_token:{token_str}", True, timeout=ttl_seconds  # noqa: E231
+                )
 
                 return Response(
                     {"result": "The password changed successfully"},
