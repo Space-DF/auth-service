@@ -131,6 +131,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_is_set_password(self, instance):
         return instance.has_usable_password()
 
+
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def get_tokens(self):
         tenant = None
