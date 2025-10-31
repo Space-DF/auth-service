@@ -96,6 +96,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(read_only=True)
     avatar = serializers.CharField(required=False)
     is_owner = serializers.BooleanField(read_only=True)
+    is_set_password = serializers.SerializerMethodField()
 
     class Meta:
         model = OrganizationUser
@@ -109,6 +110,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "company_name",
             "title",
             "is_owner",
+            "is_set_password",
         )
 
     def update(self, instance, validated_data):
@@ -126,6 +128,8 @@ class ProfileSerializer(serializers.ModelSerializer):
             )
         return data
 
+    def get_is_set_password(self, instance):
+        return instance.has_usable_password()
 
 class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
     def get_tokens(self):
@@ -155,7 +159,9 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    password = serializers.CharField()
+    password = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, write_only=True
+    )
     new_password = serializers.CharField(write_only=True)
 
     def validate_new_password(self, value: str):
@@ -178,15 +184,24 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
     def update(self, instance, validated_data):
-        if not instance.check_password(validated_data.get("password")):
-            raise serializers.ValidationError(
-                {"error": "Current password is incorrect"}
-            )
-        if validated_data["password"] == validated_data.get("new_password"):
-            raise serializers.ValidationError(
-                {"error": "New password cannot be the same as the current password"}
-            )
-        instance.set_password(validated_data.get("new_password"))
+        current_password = validated_data.get("password")
+        new_password = validated_data.get("new_password")
+
+        if instance.has_usable_password():
+            if not current_password:
+                raise serializers.ValidationError(
+                    {"password": "Current password is required."}
+                )
+            if not instance.check_password(current_password):
+                raise serializers.ValidationError(
+                    {"error": "Current password is incorrect"}
+                )
+            if current_password == new_password:
+                raise serializers.ValidationError(
+                    {"error": "New password cannot be the same as the current password"}
+                )
+
+        instance.set_password(new_password)
         instance.save()
         return instance
 
