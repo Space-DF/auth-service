@@ -20,6 +20,7 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import render_email_format
+from utils.permissions_classes import IsSpaceAdmin
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -84,6 +85,7 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
 class InviteUserAPIView(generics.CreateAPIView):
     serializer_class = InviteUserSerial
+    permission_classes = [IsSpaceAdmin]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)

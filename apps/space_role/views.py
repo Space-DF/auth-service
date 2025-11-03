@@ -78,6 +78,9 @@ class ListSpaceRoleUserView(SpaceListAPIView):
         "organization_user__email",
     ]
 
+    def get_queryset(self):
+        return super().get_queryset().exclude(organization_user=self.request.user)
+
 
 class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
     model = SpaceRoleUser

@@ -25,6 +25,8 @@ ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS", "*")]  # noqa
 HOST = os.getenv("HOST", "http://localhost:8000")  # noqa
 HOST_FRONTEND = os.getenv("HOST_FRONTEND", "http://localhost:3000")  # noqa
 DEFAULT_TENANT_HOST = os.getenv("DEFAULT_TENANT_HOST", "localhost")  # noqa
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # noqa
+USE_X_FORWARDED_HOST = True
 
 # Application definition
 SHARED_APPS = [
