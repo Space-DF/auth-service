@@ -76,7 +76,11 @@ def handle_space_access_token(request, access_token, provider: Literal["GOOGLE"]
     if is_created:
         organization_user.first_name = given_name
         organization_user.last_name = family_name
+        organization_user.set_unusable_password()
         organization_user.save()
+    elif not organization_user.password:
+        organization_user.set_unusable_password()
+        organization_user.save(update_fields=["password"])
 
     if provider.lower() not in organization_user.providers:
         organization_user.providers.append(provider.lower())
