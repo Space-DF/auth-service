@@ -53,7 +53,7 @@ urlpatterns = [
     # health
     path("auth/api/health", health_check),
     # well-known
-    path("api/", include("common.apps.jwks.urls")),
+    path("auth/api/", include("common.apps.jwks.urls")),
     # presigned-url
     path("api/", include("apps.upload_file.urls")),
 ]
