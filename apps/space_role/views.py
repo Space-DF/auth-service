@@ -26,6 +26,7 @@ from apps.space_role.services import (
     clear_user_permission_cache,
     create_space_default_role,
 )
+from utils.permissions_classes import IsSpaceAdmin
 
 
 class ListCreateSpaceRoleView(SpaceListCreateAPIView):
@@ -78,9 +79,6 @@ class ListSpaceRoleUserView(SpaceListAPIView):
         "organization_user__email",
     ]
 
-    def get_queryset(self):
-        return super().get_queryset().exclude(organization_user=self.request.user)
-
 
 class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
     model = SpaceRoleUser
@@ -88,6 +86,11 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
     lookup_field = "id"
     queryset = SpaceRoleUser.objects.select_related("space_role", "organization_user")
     space_field = "space_role__space"
+
+    def get_permissions(self):
+        if self.request.method in ["DELETE", "PUT", "PATCH"]:
+            return [IsSpaceAdmin()]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:

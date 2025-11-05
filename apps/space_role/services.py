@@ -2,6 +2,8 @@ from common.apps.space_role.models import SpacePolicy, SpaceRole
 from django.core.cache import cache
 from django.db.models import Q
 
+from apps.space_role.constants import SpaceRoleType
+
 
 def create_default_role_by_policy_tag(space, name, tags):
     q_filter = Q()
@@ -16,11 +18,15 @@ def create_default_role_by_policy_tag(space, name, tags):
 
 
 def create_space_default_role(space):
-    owner_role = create_default_role_by_policy_tag(space, "Admin", [["administrator"]])
-    reader_role = create_default_role_by_policy_tag(space, "Reader", [["read-only"]])
+    owner_role = create_default_role_by_policy_tag(
+        space, SpaceRoleType.ADMIN_ROLE, [["administrator"]]
+    )
+    reader_role = create_default_role_by_policy_tag(
+        space, SpaceRoleType.READER_ROLE, [["read-only"]]
+    )
     create_default_role_by_policy_tag(
         space,
-        "Editor",
+        SpaceRoleType.EDITOR_ROLE,
         [
             ["dashboard", "full-access"],
             ["space-role", "read-only"],
