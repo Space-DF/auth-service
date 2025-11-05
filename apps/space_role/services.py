@@ -21,8 +21,8 @@ def create_space_default_role(space):
     owner_role = create_default_role_by_policy_tag(
         space, SpaceRoleType.ADMIN_ROLE, [["administrator"]]
     )
-    reader_role = create_default_role_by_policy_tag(
-        space, SpaceRoleType.READER_ROLE, [["read-only"]]
+    viewer_role = create_default_role_by_policy_tag(
+        space, SpaceRoleType.VIEWER_ROLE, [["read-only"]]
     )
     create_default_role_by_policy_tag(
         space,
@@ -34,7 +34,7 @@ def create_space_default_role(space):
         ],
     )
 
-    return owner_role, reader_role
+    return owner_role, viewer_role
 
 
 def clear_user_permission_cache(user_id):
