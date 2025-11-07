@@ -1,8 +1,6 @@
+from common.apps.space_role.constants import SpaceRoleType
 from common.apps.space_role.models import SpacePolicy, SpaceRole
-from django.core.cache import cache
 from django.db.models import Q
-
-from apps.space_role.constants import SpaceRoleType
 
 
 def create_default_role_by_policy_tag(space, name, tags):
@@ -35,10 +33,3 @@ def create_space_default_role(space):
     )
 
     return owner_role, viewer_role
-
-
-def clear_user_permission_cache(user_id):
-    if user_id:
-        cache_key = f"space_permissions_{user_id}"
-        if cache.get(cache_key):
-            cache.delete(cache_key)

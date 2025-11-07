@@ -1,9 +1,9 @@
+from common.apps.space_role.constants import SpaceRoleType
 from common.apps.space_role.models import SpacePolicy, SpaceRole, SpaceRoleUser
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from apps.authentication.serializers import ProfileSerializer
-from apps.space_role.constants import SpaceRoleType
 
 
 class SpacePolicySerializer(serializers.ModelSerializer):

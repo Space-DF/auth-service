@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
+from common.apps.space_role.models import SpaceRole
 from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
@@ -21,13 +22,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.authentication.serializers import (
     AuthTokenPairSerializer,
     ChangePasswordSerializer,
+    CheckPermissionSerializer,
     ForgetPasswordSerializer,
     ProfileSerializer,
     RegistrationSerializer,
     SendEmailSerializer,
 )
 from apps.authentication.services import (
-    create_space_access_token,
     create_space_jwt_tokens,
     generate_otp,
     handle_space_access_token,
@@ -65,15 +66,6 @@ class RegistrationAPIView(generics.GenericAPIView):
 class CustomRefreshTokenAPIView(TokenRefreshView):
     authentication_classes = []
     _serializer_class = "apps.authentication.serializers.CustomTokenRefreshSerializer"
-
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        params = {}
-        return {
-            **context,
-            "access_token_handler": create_space_access_token,
-            "access_token_handler_params": params,
-        }
 
 
 class LoginAPIView(TokenObtainPairView):
@@ -249,3 +241,21 @@ class ProfileAPIView(generics.RetrieveAPIView):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CheckPermissionView(generics.GenericAPIView):
+    serializer_class = CheckPermissionSerializer
+
+    def post(self, request):
+        serializer = CheckPermissionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        has_allowed_role = SpaceRole.objects.filter(
+            space_role_user__organization_user__id=serializer.validated_data.get(
+                "user_id"
+            ),
+            space__slug_name=serializer.validated_data.get("slug_name"),
+            name__in=serializer.validated_data.get("allowed_roles"),
+        ).exists()
+
+        return Response({"allowed": has_allowed_role}, status=status.HTTP_200_OK)

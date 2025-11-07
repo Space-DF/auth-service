@@ -3,6 +3,7 @@ from django.urls import include, path
 
 from apps.authentication.views import (
     ChangePasswordAPIView,
+    CheckPermissionView,
     CustomRefreshTokenAPIView,
     ForgetPasswordView,
     GoogleLoginTokenView,
@@ -31,5 +32,10 @@ urlpatterns = [
     path("auth/send-otp", SendOTPView.as_view(), name="send_otp"),
     path(
         "auth/send-email-confirm", SendEmailToConfirmView.as_view(), name="send_email"
+    ),
+    path(
+        "auth/permissions/check",
+        CheckPermissionView.as_view(),
+        name="check_permissions",
     ),
 ]

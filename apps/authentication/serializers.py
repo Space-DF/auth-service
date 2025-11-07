@@ -1,7 +1,6 @@
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.refresh_tokens.serializers import (
     BaseTokenObtainPairSerializer,
-    CustomTokenRefreshSerializer,
     TokenPairSerializer,
 )
 from common.apps.space.models import Space
@@ -142,12 +141,12 @@ class TokenObtainPairSerializer(BaseTokenObtainPairSerializer):
             space_role__space_role_user__organization_user_id=self.user.id,
             space_role__space_role_user__is_default=True,
         ).first()
-        default_space_slug = default_space.slug_name if default_space else None
+        default_slug_name = default_space.slug_name if default_space else None
         refresh_token, access_token = create_space_jwt_tokens(
-            self.user, space_slug=default_space_slug, issuer=tenant
+            self.user, slug_name=default_slug_name, issuer=tenant
         )
 
-        return refresh_token, access_token, default_space_slug
+        return refresh_token, access_token, default_slug_name
 
     def get_response_data(self):
         refresh_token, access_token, default_space = self.get_tokens()
@@ -215,10 +214,15 @@ class SendEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
 
-class SpaceTokenRefreshSerializer(CustomTokenRefreshSerializer):
-    space_slug_name = serializers.CharField(write_only=True, allow_null=True)
-
-
 class ForgetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField()
     password = serializers.CharField()
+
+
+class CheckPermissionSerializer(serializers.Serializer):
+    user_id = serializers.UUIDField()
+    slug_name = serializers.CharField()
+    allowed_roles = serializers.ListField(
+        child=serializers.CharField(max_length=64),
+        allow_empty=False,
+    )

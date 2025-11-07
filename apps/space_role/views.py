@@ -6,10 +6,7 @@ from common.views.space import (
     SpaceListCreateAPIView,
     SpaceRetrieveUpdateDestroyAPIView,
 )
-from django.db import transaction
 from django.db.models import BooleanField, Case, When
-from django.db.models.signals import post_delete, post_save
-from django.dispatch import receiver
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView, get_object_or_404
@@ -21,10 +18,6 @@ from apps.space_role.serializers import (
     SpaceRoleSerializer,
     SpaceRoleUserSerializer,
     SpaceRoleUserUpdateSerializer,
-)
-from apps.space_role.services import (
-    clear_user_permission_cache,
-    create_space_default_role,
 )
 from utils.permissions_classes import IsSpaceAdmin
 
@@ -39,6 +32,11 @@ class ListCreateSpaceRoleView(SpaceListCreateAPIView):
     ordering_fields = ["created_at"]
     search_fields = ["name"]
 
+    def get_permissions(self):
+        if self.request.method in ["POST"]:
+            return [IsSpaceAdmin()]
+        return super().get_permissions()
+
 
 class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
     model = SpaceRole
@@ -46,6 +44,11 @@ class UpdateDeleteSpaceRoleView(SpaceRetrieveUpdateDestroyAPIView):
     lookup_field = "id"
     queryset = SpaceRole.objects.all()
     space_field = "space"
+
+    def get_permissions(self):
+        if self.request.method in ["DELETE", "PUT", "PATCH"]:
+            return [IsSpaceAdmin()]
+        return super().get_permissions()
 
 
 class ListSpacePolicyView(ListAPIView):
@@ -98,23 +101,9 @@ class RetrieveDeleteSpaceRoleUserView(SpaceRetrieveUpdateDestroyAPIView):
         return super().get_serializer_class()
 
 
-@receiver(post_save, sender=Space)
-@transaction.atomic
-def handle_new_space(sender, instance, created, **kwargs):
-    if created:
-        owner_role, _ = create_space_default_role(instance)
-        has_any_space = SpaceRoleUser.objects.filter(
-            organization_user_id=instance.created_by
-        ).exists()
-
-        SpaceRoleUser.objects.create(
-            organization_user_id=instance.created_by,
-            space_role=owner_role,
-            is_default=not has_any_space,
-        )
-
-
 class SpaceRoleUserDefaultView(APIView):
+    permission_classes = [IsSpaceAdmin]
+
     def post(self, request, *args, **kwargs):
         instance = get_object_or_404(Space, id=kwargs.get("id"))
         user_id = request.headers.get("X-User-ID", None)
@@ -133,15 +122,3 @@ class SpaceRoleUserDefaultView(APIView):
         return Response(
             {"result": "Set default for Space successful"}, status=status.HTTP_200_OK
         )
-
-
-@receiver(post_save, sender=SpaceRoleUser)
-def handle_post_save(sender, instance, created, **kwargs):
-    user_id = getattr(instance, "organization_user_id", None)
-    clear_user_permission_cache(user_id)
-
-
-@receiver(post_delete, sender=SpaceRoleUser)
-def handle_post_delete(sender, instance, **kwargs):
-    user_id = getattr(instance, "organization_user_id", None)
-    clear_user_permission_cache(user_id)
