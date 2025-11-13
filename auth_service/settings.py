@@ -60,6 +60,7 @@ TENANT_APPS = [
     "apps.spacedf_provider",
     "allauth.socialaccount",
     "apps.upload_file",
+    "apps.mqtt_authorize",
 ]
 
 INSTALLED_APPS = SHARED_APPS + [app for app in TENANT_APPS if app not in SHARED_APPS]
