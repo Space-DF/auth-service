@@ -2,7 +2,7 @@ from common.apps.space_role.models import SpaceRoleUser
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import UntypedToken
 
-from apps.mqtt_authorize.constants import TOPIC_NONSPACE_RE, TOPIC_SPACE_RE
+from apps.mqtt_authorize.constants import TOPIC_NONSPACE_REGEX, TOPIC_SPACE_REGEX
 
 
 def check_user_in_space(username: str, topic: str) -> str:
@@ -13,10 +13,10 @@ def check_user_in_space(username: str, topic: str) -> str:
     """
     topic = (topic or "").strip("/")
 
-    if TOPIC_NONSPACE_RE.match(topic):
+    if TOPIC_NONSPACE_REGEX.match(topic):
         return "allow"
 
-    match = TOPIC_SPACE_RE.match(topic)
+    match = TOPIC_SPACE_REGEX.match(topic)
     if not match:
         return "deny"
 

@@ -1,4 +1,4 @@
-from common.utils.use_tenant_from_request import UseTenantFromRequestMixin
+from common.utils.switch_tenant import UseTenantFromRequestMixin
 from rest_framework import generics, status
 from rest_framework.response import Response
 
