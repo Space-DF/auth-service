@@ -53,6 +53,7 @@ TENANT_APPS = [
     "common.apps.organization_user",
     "common.apps.space",
     "apps.space",
+    "apps.space_role",
     "common.apps.space_role",
     "allauth.account",
     "allauth",

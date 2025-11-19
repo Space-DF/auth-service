@@ -6,10 +6,9 @@ from typing import Literal
 import requests
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.refresh_tokens.services import create_jwt_tokens
-from common.apps.space_role.models import SpacePolicy, SpaceRoleUser
+from common.apps.space_role.models import SpaceRoleUser
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -17,40 +16,34 @@ from rest_framework.response import Response
 
 
 def create_space_access_token(user_id, access_token):
-    space_permissions_cache = cache.get(f"space_permissions_{user_id}")
-    if space_permissions_cache:
-        access_token["space_permissions"] = space_permissions_cache
+    space_roles_cache = cache.get(f"space_roles_{user_id}")
+    if space_roles_cache:
+        access_token["space_roles"] = space_roles_cache
         return access_token
+
+    # Query role per space
     role_users = (
         SpaceRoleUser.objects.filter(organization_user_id=user_id)
         .select_related("space_role__space")
-        .prefetch_related(
-            Prefetch(
-                "space_role__policies",
-                queryset=SpacePolicy.objects.all(),
-                to_attr="space_policies",
-            )
-        )
         .order_by("space_role__space_id")
         .distinct("space_role__space_id")
     )
-    space_permissions = {}
+
+    # Build dict space_slug -> single role
+    space_roles_dict = {}
     for role_user in role_users:
         space_slug = str(role_user.space_role.space.slug_name)
-        if space_slug not in space_permissions:
-            space_permissions[space_slug] = set()
-        for policy in getattr(role_user.space_role, "space_policies", []):
-            space_permissions[space_slug].update(policy.permissions)
-    space_permissions_dict = {
-        space_slug: list(permissions)
-        for space_slug, permissions in space_permissions.items()
-    }
+        role_name = str(role_user.space_role.name)
+        space_roles_dict[space_slug] = role_name
+
     cache.set(
-        f"space_permissions_{user_id}",
-        space_permissions_dict,
+        f"space_roles_{user_id}",
+        space_roles_dict,
         timeout=60 * 60 * 24,
     )
-    access_token["space_permissions"] = space_permissions_dict
+
+    # Update access token
+    access_token["space_roles"] = space_roles_dict
     return access_token
 
 

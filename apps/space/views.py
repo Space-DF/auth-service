@@ -20,7 +20,6 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import render_email_format
-from utils.permissions_classes import IsSpaceAdmin, IsSpaceEditor
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -31,13 +30,6 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["created_at"]
     search_fields = ["name"]
-
-    def get_permissions(self):
-        if self.request.method in ["PUT", "PATCH"]:
-            return [IsSpaceEditor()]
-        if self.request.method in ["DELETE"]:
-            return [IsSpaceAdmin()]
-        return super().get_permissions()
 
     def get_object(self):
         space_slug = self.request.headers.get("X-Space", None)
@@ -92,7 +84,6 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
 class InviteUserAPIView(generics.CreateAPIView):
     serializer_class = InviteUserSerial
-    permission_classes = [IsSpaceAdmin]
 
     def get_object(self):
         user_id = self.request.headers.get("X-User-ID", None)
