@@ -39,6 +39,6 @@ def create_space_default_role(space):
 
 def clear_user_permission_cache(user_id):
     if user_id:
-        cache_key = f"space_permissions_{user_id}"
+        cache_key = f"space_roles_{user_id}"
         if cache.get(cache_key):
             cache.delete(cache_key)
