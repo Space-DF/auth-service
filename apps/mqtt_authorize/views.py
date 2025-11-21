@@ -3,7 +3,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from apps.mqtt_authorize.serializers import MQTTAuthorizeSerializer
-from apps.mqtt_authorize.services import check_user_in_space
+from apps.mqtt_authorize.services import check_user_in_space, save_client_id
 
 
 class MQTTAuthorizeView(UseTenantFromRequestMixin, generics.GenericAPIView):
@@ -15,6 +15,9 @@ class MQTTAuthorizeView(UseTenantFromRequestMixin, generics.GenericAPIView):
 
         topic = serializer.validated_data["topic"]
         username = serializer.validated_data["username"]
+        client_id = serializer.validated_data["client_id"]
 
-        result = check_user_in_space(username, topic)
+        result, user_id = check_user_in_space(username, topic)
+
+        save_client_id(result, user_id, client_id)
         return Response({"result": result}, status=status.HTTP_200_OK)

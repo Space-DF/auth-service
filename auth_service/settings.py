@@ -28,6 +28,13 @@ DEFAULT_TENANT_HOST = os.getenv("DEFAULT_TENANT_HOST", "localhost")  # noqa
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # noqa
 USE_X_FORWARDED_HOST = True
 
+# EMQX configuration
+EMQX_API_URL = os.getenv("EMQX_API_URL", "http://emqx:18083/api/v5")
+EMQX_API_APP_ID = os.getenv("EMQX_API_APP_ID", "9ad9262280de4cec")
+EMQX_API_APP_SECRET = os.getenv(
+    "EMQX_API_APP_SECRET", "Uub4c4aZWPW5C1nEIK9CayOAZEUrBCLBlGVx58wFBvrJ"
+)
+
 # Application definition
 SHARED_APPS = [
     "django_tenants",
