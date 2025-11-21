@@ -30,9 +30,9 @@ USE_X_FORWARDED_HOST = True
 
 # EMQX configuration
 EMQX_API_URL = os.getenv("EMQX_API_URL", "http://emqx:18083/api/v5")
-EMQX_API_APP_ID = os.getenv("EMQX_API_APP_ID", "9ad9262280de4cec")
+EMQX_API_APP_ID = os.getenv("EMQX_API_APP_ID", "")
 EMQX_API_APP_SECRET = os.getenv(
-    "EMQX_API_APP_SECRET", "Uub4c4aZWPW5C1nEIK9CayOAZEUrBCLBlGVx58wFBvrJ"
+    "EMQX_API_APP_SECRET", ""
 )
 
 # Application definition
