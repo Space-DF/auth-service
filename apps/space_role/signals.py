@@ -4,6 +4,7 @@ from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
+from apps.mqtt_authorize.services import disconnect_user_clients
 from apps.space_role.services import (
     clear_user_permission_cache,
     create_space_default_role,
@@ -20,6 +21,7 @@ def handle_post_save(sender, instance, created, **kwargs):
 def handle_post_delete(sender, instance, **kwargs):
     user_id = getattr(instance, "organization_user_id", None)
     clear_user_permission_cache(user_id)
+    disconnect_user_clients(user_id)
 
 
 @receiver(post_save, sender=Space)
