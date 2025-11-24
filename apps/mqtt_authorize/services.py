@@ -57,7 +57,7 @@ def save_client_id(result: str, user_id: str | None, client_id: str):
         if client_id not in client_ids:
             client_ids.append(client_id)
 
-        cache.set(cache_key, {"client_ids": client_ids})
+        cache.set(cache_key, {"client_ids": client_ids}, timeout=60 * 60)
 
 
 def disconnect_user_clients(user_id: str | None):
@@ -69,7 +69,6 @@ def disconnect_user_clients(user_id: str | None):
     client_ids: List[str] = data.get("client_ids", [])
 
     if not client_ids:
-        cache.delete(cache_key)
         return
 
     emqx_client = EMQXClient()
