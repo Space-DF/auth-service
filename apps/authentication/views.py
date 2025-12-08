@@ -134,6 +134,13 @@ class SendEmailToConfirmView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
+
+        if not OrganizationUser.objects.filter(email=email).exists():
+            return Response(
+                {"result": "No account found with this email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         subject = "Forget the password"
         token = generate_token({"email": email})
         sub_host = update_subdomain(settings.HOST_FRONTEND, request.tenant.slug_name)
