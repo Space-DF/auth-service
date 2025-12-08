@@ -140,7 +140,7 @@ class SendEmailToConfirmView(generics.GenericAPIView):
                 {"result": "No account found with this email address."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         subject = "Forget the password"
         token = generate_token({"email": email})
         sub_host = update_subdomain(settings.HOST_FRONTEND, request.tenant.slug_name)
