@@ -17,7 +17,7 @@ class MQTTAuthorizeView(UseTenantFromRequestMixin, generics.GenericAPIView):
         username = serializer.validated_data["username"]
         client_id = serializer.validated_data["client_id"]
 
-        result, user_id = check_user_in_space(username, topic)
+        result, user_id, space_slug = check_user_in_space(username, topic)
 
-        save_client_id(result, user_id, client_id)
+        save_client_id(result, user_id, space_slug, client_id)
         return Response({"result": result}, status=status.HTTP_200_OK)

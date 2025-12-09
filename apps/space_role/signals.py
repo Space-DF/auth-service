@@ -21,7 +21,7 @@ def handle_post_save(sender, instance, created, **kwargs):
 def handle_post_delete(sender, instance, **kwargs):
     user_id = getattr(instance, "organization_user_id", None)
     clear_user_permission_cache(user_id)
-    disconnect_user_clients(user_id)
+    disconnect_user_clients(user_id, instance.space_role.space.slug_name)
 
 
 @receiver(post_save, sender=Space)

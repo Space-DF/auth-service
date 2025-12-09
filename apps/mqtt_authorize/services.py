@@ -12,7 +12,9 @@ from apps.mqtt_authorize.constants import TOPIC_NONSPACE_REGEX, TOPIC_SPACE_REGE
 logger = logging.getLogger(__name__)
 
 
-def check_user_in_space(username: str, topic: str) -> Tuple[str, str | None]:
+def check_user_in_space(
+    username: str, topic: str
+) -> Tuple[str, str | None, str | None]:
     """
     Policy:
     - Topic does NOT have /space/<slug>/ -> allows ANY username (including anonymous)
@@ -22,21 +24,21 @@ def check_user_in_space(username: str, topic: str) -> Tuple[str, str | None]:
     topic = (topic or "").strip("/")
 
     if TOPIC_NONSPACE_REGEX.match(topic):
-        return "allow", None
+        return "allow", None, None
 
     match = TOPIC_SPACE_REGEX.match(topic)
     if not match:
-        return "deny", None
+        return "deny", None, None
 
     try:
         token = UntypedToken(username)
     except (TokenError, InvalidToken):
-        return "deny", None
+        return "deny", None, None
 
     payload = getattr(token, "payload", {})
     user_id = payload.get("user_id")
     if not user_id:
-        return "deny", None
+        return "deny", None, None
 
     slug_name = match.group("space")
 
@@ -45,12 +47,14 @@ def check_user_in_space(username: str, topic: str) -> Tuple[str, str | None]:
         space_role__space__slug_name=slug_name,
     ).exists()
 
-    return ("allow", str(user_id)) if is_exists else ("deny", None)
+    return ("allow", str(user_id), slug_name) if is_exists else ("deny", None, None)
 
 
-def save_client_id(result: str, user_id: str | None, client_id: str):
+def save_client_id(
+    result: str, user_id: str | None, space_slug: str | None, client_id: str
+):
     if result == "allow" and user_id:
-        cache_key = f"user_id:{user_id}_client"  # noqa E231
+        cache_key = f"user_id:{user_id}_{space_slug}_client"  # noqa E231
         data = cache.get(cache_key) or {}
         client_ids: List[str] = data.get("client_ids", [])
 
@@ -60,11 +64,11 @@ def save_client_id(result: str, user_id: str | None, client_id: str):
         cache.set(cache_key, {"client_ids": client_ids}, timeout=60 * 60)
 
 
-def disconnect_user_clients(user_id: str | None):
+def disconnect_user_clients(user_id: str | None, space_slug: str | None):
     if not user_id:
         return
 
-    cache_key = f"user_id:{user_id}_client"  # noqa E231
+    cache_key = f"user_id:{user_id}_{space_slug}_client"  # noqa E231
     data = cache.get(cache_key) or {}
     client_ids: List[str] = data.get("client_ids", [])
 
