@@ -11,6 +11,11 @@ TOPIC_SPACE_REGEX = re.compile(
 )
 
 TOPIC_ENTITY_SPACE_REGEX = re.compile(
-    r"^tenant/(?P<org>[a-z0-9\-]+)/space/(?P<space>[a-z0-9\-]+)/entity/(?P<entities>[^/]+)(?:/.*)?$",
+    r"^tenant/(?P<org>[a-z0-9\-]+)/space/(?P<space>[a-z0-9\-]+)/entity/(?P<entity>[^/]+)(?:/.*)?$",
+    re.IGNORECASE,
+)
+
+TOPIC_ENTITY_NONSPACE_REGEX = re.compile(
+    r"^tenant/(?P<org>[a-z0-9\-]+)/entity/(?P<entity>[^/]+)(?:/.*)?$",
     re.IGNORECASE,
 )

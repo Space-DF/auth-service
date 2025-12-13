@@ -8,6 +8,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import UntypedToken
 
 from apps.mqtt_authorize.constants import (
+    TOPIC_ENTITY_NONSPACE_REGEX,
     TOPIC_ENTITY_SPACE_REGEX,
     TOPIC_NONSPACE_REGEX,
     TOPIC_SPACE_REGEX,
@@ -24,12 +25,17 @@ def check_user_in_space(
     - Topic does NOT have /space/<slug>/ -> allows ANY username (including anonymous)
     - Topic does HAVE /space/<slug>/ -> requires username to be a valid JWT and user belongs to that space
     - Entity topics (with /entity/) -> also requires user to belong to that space
+    - Non-space entity topics -> allows ANY username (including anonymous)
     Returns tuple of (result, user_id or None, space_slug or None).
     """
     topic = (topic or "").strip("/")
 
     # Non-space topic: allow any user
     if TOPIC_NONSPACE_REGEX.match(topic):
+        return "allow", None, None
+
+    # Non-space entity topic: allow any user
+    if TOPIC_ENTITY_NONSPACE_REGEX.match(topic):
         return "allow", None, None
 
     # Check space/device topics
