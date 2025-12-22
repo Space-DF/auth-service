@@ -30,8 +30,8 @@ USE_X_FORWARDED_HOST = True
 
 # EMQX configuration
 EMQX_API_URL = os.getenv("EMQX_API_URL", "http://emqx:18083/api/v5")
-EMQX_API_APP_ID = os.getenv("EMQX_API_APP_ID", "")
-EMQX_API_APP_SECRET = os.getenv("EMQX_API_APP_SECRET", "")
+EMQX_USERNAME = os.getenv("EMQX_USERNAME", "user1")
+EMQX_PASSWORD = os.getenv("EMQX_PASSWORD", "password123")
 
 # Application definition
 SHARED_APPS = [
