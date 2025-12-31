@@ -17,6 +17,7 @@ from pathlib import Path
 # Basic settings
 SERVICE_NAME = "auth"
 BASE_DIR = Path(__file__).resolve().parent.parent
+COMMON_UTILS_DIR = Path(__file__).resolve().parent.parent.parent / "django-common-utils"
 SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-*$0b8ibx7uzk45cm+fxw7*jj(yzi2ye!l4+!dnyxa-u-nbuz=q"
 )  # noqa
@@ -91,7 +92,7 @@ ROOT_URLCONF = "auth_service.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [COMMON_UTILS_DIR / "common" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -140,7 +141,7 @@ USE_TZ = True
 # Static files
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "static/"
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+STATICFILES_DIRS = (os.path.join(COMMON_UTILS_DIR, "common", "static"),)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
