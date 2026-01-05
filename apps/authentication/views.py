@@ -113,7 +113,7 @@ class SendOTPView(generics.GenericAPIView):
         if serializer.is_valid():
             otp_code = generate_otp()
             email = serializer.validated_data["email"]
-            subject = "Your One-Time Sign-In Code"
+            subject = "🌟 Use This Code to Get Started"
             data = {
                 "host": settings.HOST,
                 "otp_code": otp_code,
@@ -142,7 +142,7 @@ class SendEmailToConfirmView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        subject = "Forget the password"
+        subject = "🔒 Forgot your password? Reset now"
         token = generate_token({"email": email})
         sub_host = update_subdomain(settings.HOST_FRONTEND, request.tenant.slug_name)
         data = {
