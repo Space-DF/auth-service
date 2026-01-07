@@ -13,6 +13,7 @@ urlpatterns = [
     path(
         "spaces",
         SpaceView.as_view(),
+        name="spaces",
     ),
     path(
         "spaces/invitation",

@@ -1,3 +1,5 @@
+import logging
+
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.refresh_tokens.serializers import (
     BaseTokenObtainPairSerializer,
@@ -12,6 +14,8 @@ from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
 from apps.upload_file.service import get_presigned_url
+
+logger = logging.getLogger(__name__)
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -79,11 +83,19 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         email = validated_data.get("email")
-        validated_data.pop("otp", None)  # Ensure OTP is not passed to the database
-        cache.delete(
-            f"otp_{email}"
-        )  # Remove OTP from Redis after successful validation
-        return OrganizationUser.objects.create_user(**validated_data)
+        try:
+            validated_data.pop("otp", None)
+            cache.delete(f"otp_{email}")
+            user = OrganizationUser.objects.create_user(**validated_data)
+            logger.info(
+                f"Organization user created successfully with email: {email}, ID: {user.id}"
+            )
+            return user
+        except Exception as e:
+            logger.error(
+                f"Failed to create organization user for email {email}: {str(e)}"
+            )
+            raise
 
 
 class SpaceDFConsoleLoginSerializer(serializers.Serializer):
@@ -114,19 +126,35 @@ class ProfileSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+        try:
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+            logger.info(f"Profile updated successfully for user ID: {instance.id}")
+            return instance
+        except Exception as e:
+            logger.error(
+                f"Failed to update profile for user ID {instance.id}: {str(e)}",
+                exc_info=True,
+            )
+            raise
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if instance.avatar:
-            data["avatar"] = get_presigned_url(
-                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                f"uploads/{instance.avatar}.png",
+        try:
+            data = super().to_representation(instance)
+            if instance.avatar:
+                data["avatar"] = get_presigned_url(
+                    settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                    f"uploads/{instance.avatar}.png",
+                )
+            logger.debug(f"Profile representation completed for user ID: {instance.id}")
+            return data
+        except Exception as e:
+            logger.error(
+                f"Failed to generate profile representation for user ID {instance.id}: {str(e)}",
+                exc_info=True,
             )
-        return data
+            raise
 
     def get_is_set_password(self, instance):
         return instance.has_usable_password()
