@@ -1,3 +1,5 @@
+import uuid
+
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
@@ -10,7 +12,8 @@ from django.conf import settings
 from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse
-from rest_framework import generics, status
+from django.utils.text import slugify
+from rest_framework import generics, serializers, status
 from rest_framework.exceptions import NotFound, ParseError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
@@ -50,12 +53,19 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def perform_create(self, serializer):
-        user_id = self.request.headers.get("X-User-ID", "")
-        organization_user = get_object_or_404(OrganizationUser, id=user_id)
-        serializer.save(created_by=organization_user.id)
+        name = serializer.validated_data["name"]
+        name_format = name.lower().replace("_", "-")
+        slug_name = f"{slugify(name_format)}-{uuid.uuid4().hex[:10]}"
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        if not Space.objects.filter(slug_name=slug_name).exists():
+            user_id = self.request.headers.get("X-User-ID", "")
+            organization_user = get_object_or_404(OrganizationUser, id=user_id)
+            serializer.save(created_by=organization_user.id, slug_name=slug_name)
+            return
+
+        raise serializers.ValidationError(
+            {"slug_name": "Could not generate a unique slug, please try again"}
+        )
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
