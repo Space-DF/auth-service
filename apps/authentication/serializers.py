@@ -5,13 +5,13 @@ from common.apps.refresh_tokens.serializers import (
     TokenPairSerializer,
 )
 from common.apps.space.models import Space
+from common.apps.upload_file.service import get_presigned_url
 from common.errors.errors import ExistedEmailError
 from django.conf import settings
 from django.core.cache import cache
 from rest_framework import serializers
 
 from apps.authentication.services import create_space_jwt_tokens
-from apps.upload_file.service import get_presigned_url
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
