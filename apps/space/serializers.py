@@ -19,6 +19,7 @@ class SpaceSerializer(serializers.ModelSerializer):
             "id": {"read_only": True},
             "total_devices": {"read_only": True},
             "is_active": {"read_only": True},
+            "slug_name": {"read_only": True},
             "is_default": {"read_only": True},
             "created_by": {"read_only": True},
             "created_at": {"read_only": True},
