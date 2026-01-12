@@ -315,7 +315,3 @@ CACHES = {
         },
     }
 }
-
-# TODOs
-# TODO: apply allauth for google login
-# TODO: subdomain problem
