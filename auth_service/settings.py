@@ -66,7 +66,7 @@ TENANT_APPS = [
     "allauth.headless",
     "apps.spacedf_provider",
     "allauth.socialaccount",
-    "apps.upload_file",
+    "common.apps.upload_file",
     "apps.mqtt_authorize",
 ]
 

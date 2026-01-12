@@ -55,6 +55,6 @@ urlpatterns = [
     # well-known
     path("auth/api/", include("common.apps.jwks.urls")),
     # presigned-url
-    path("api/", include("apps.upload_file.urls")),
+    path("api/", include("common.apps.upload_file.urls")),
     path("api/", include("apps.mqtt_authorize.urls")),
 ]
