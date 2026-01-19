@@ -1,21 +1,25 @@
 FROM python:3.10-alpine
+
 ENV PYTHONUNBUFFERED=1
-
-# Allows docker to cache installed dependencies between builds
-RUN apk add build-base libffi-dev curl
-COPY ./auth-service/requirements.txt requirements.txt
-RUN pip install -r requirements.txt
-COPY ./django-common-utils django-common-utils
-RUN pip install ../django-common-utils
-
-# Adds our application code to the image
-COPY ./auth-service auth-service
-
-WORKDIR /auth-service
-
-EXPOSE 80
-
 ENV DJANGO_SETTINGS_MODULE="auth_service.settings"
+
+RUN apk add --no-cache \
+    build-base \
+    libffi-dev \
+    curl \
+    git
+
+# Configure git to use GITHUB_TOKEN for private repo access
+RUN git config --global credential.helper store && \
+    git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+RUN pip install --no-cache-dir \
+    git+https://github.com/Space-DF/django-common-utils.git@dev
+
+COPY . .
+WORKDIR /app
+
+RUN pip install -r requirements.txt
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
 
