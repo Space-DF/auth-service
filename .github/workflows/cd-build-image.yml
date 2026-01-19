@@ -1,13 +1,14 @@
-name: CD
+name: Build & Publish Docker Image
 
 on:
   push:
     branches:
       - main
+      - dev
 
 jobs:
   deploy:
-    name: Build & Deploy spacedf-backend
+    name: Build & Deploy spacedf-backend Docker Image
     runs-on: ubuntu-latest
 
     permissions:
@@ -26,12 +27,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Generate Docker metadata
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            # main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha
+
+            # dev branch
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+
       # Build & Push image
       - name: Build & Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
