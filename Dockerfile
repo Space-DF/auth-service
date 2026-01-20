@@ -12,7 +12,7 @@ RUN apk add --no-cache \
 # Install private repo using BuildKit secret
 RUN --mount=type=secret,id=github_token \
     pip install --no-cache-dir \
-    git+https://x-access-token:$(cat /run/secrets/github_token)@github.com/Space-DF/django-common-utils.git@dev
+    git+https://$(cat /run/secrets/github_token)@github.com/Space-DF/django-common-utils.git@dev
 
 
 COPY . .
