@@ -18,7 +18,7 @@ RUN --mount=type=secret,id=github_token \
 COPY . .
 WORKDIR /app
 
-RUN pip install -r requirements.txt
+RUN pip install -r ./requirements.txt
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
 
