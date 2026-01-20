@@ -15,9 +15,9 @@ RUN --mount=type=secret,id=github_token \
     git+https://$(cat /run/secrets/github_token)@github.com/Space-DF/django-common-utils.git@dev
 
 
-COPY . .
 WORKDIR /app
 
+COPY . .
 RUN pip install -r ./requirements.txt
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
