@@ -24,9 +24,11 @@ jobs:
 
       - name: Promote version to stable
         run: |
-          IMAGE=ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE=ghcr.io/${{ github.repository }}
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           VERSION=${{ inputs.version }}
 
           docker buildx imagetools create \
-            -t $IMAGE:stable \
+            --tag $IMAGE:stable \
+            --prefer-index \
             $IMAGE:$VERSION
