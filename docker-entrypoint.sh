@@ -1,5 +1,7 @@
 #!/bin/ash
 
+python manage.py collectstatic --noinput
+
 echo "Apply database migrations"
 python manage.py migrate_schemas --shared
 python manage.py migrate
