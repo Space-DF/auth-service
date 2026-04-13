@@ -35,7 +35,12 @@ class SpaceSerializer(serializers.ModelSerializer):
         if instance.logo:
             data["logo"] = get_presigned_url(
                 settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                f"uploads/{instance.logo}.png",
+                f"uploads/{instance.logo}",
+            )
+        if instance.build_artifact:
+            data["build_artifact"] = get_presigned_url(
+                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                f"uploads/{instance.build_artifact}",
             )
 
         created_by = (
