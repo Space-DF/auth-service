@@ -143,9 +143,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         try:
             data = super().to_representation(instance)
             if instance.avatar:
-                data["avatar"] = get_presigned_url(
+                data["url_avatar"] = get_presigned_url(
                     settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                    f"uploads/{instance.avatar}.png",
+                    f"uploads/{instance.avatar}",
                 )
             logger.debug(f"Profile representation completed for user ID: {instance.id}")
             return data
