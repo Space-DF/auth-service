@@ -33,12 +33,12 @@ class SpaceSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.logo:
-            data["logo"] = get_presigned_url(
+            data["url_logo"] = get_presigned_url(
                 settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
                 f"uploads/{instance.logo}",
             )
         if instance.build_artifact:
-            data["build_artifact"] = get_presigned_url(
+            data["url_build_artifact"] = get_presigned_url(
                 settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
                 f"uploads/{instance.build_artifact}",
             )
