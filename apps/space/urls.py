@@ -2,6 +2,7 @@ from django.urls import path
 
 from apps.space.views import (
     AddUserToSpaceAPIView,
+    GetSpaceUsersAPIView,
     InviteUserAPIView,
     RedirectAddUserToSpaceAPIView,
     SpaceView,
@@ -14,6 +15,11 @@ urlpatterns = [
         "spaces",
         SpaceView.as_view(),
         name="spaces",
+    ),
+    path(
+        "spaces/<str:space_slug>/users",
+        GetSpaceUsersAPIView.as_view(),
+        name="get_user_ids",
     ),
     path(
         "spaces/invitation",

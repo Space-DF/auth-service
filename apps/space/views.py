@@ -6,6 +6,7 @@ from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
+from common.utils.switch_tenant import UseTenantFromRequestMixin
 from common.utils.token_jwt import generate_token
 from common.views.space import SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView
 from django.conf import settings
@@ -191,3 +192,30 @@ class AddUserToSpaceAPIView(APIView):
             space_role=space_role, organization_user=user_organization
         )
         return Response({"result": "User added successfully"}, status=200)
+
+
+class GetSpaceUsersAPIView(UseTenantFromRequestMixin, APIView):
+    def get(self, request, *args, **kwargs):
+        space_slug = kwargs.get("space_slug")
+        if not space_slug:
+            return Response(
+                {"error": "Space slug is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        space = get_object_or_404(Space, slug_name=space_slug)
+        user_ids = (
+            OrganizationUser.objects.filter(
+                space_role_user__space_role__space_id=space.id
+            )
+            .values_list("id", flat=True)
+            .distinct()
+        )
+
+        return Response(
+            {
+                "user_ids": list(user_ids),
+                "total_users": len(user_ids),
+            },
+            status=status.HTTP_200_OK,
+        )
