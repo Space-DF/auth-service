@@ -110,7 +110,7 @@ class InviteUserAPIView(generics.CreateAPIView):
         if space_slug_name is None:
             raise ParseError("X-Space header is required")
         space = get_object_or_404(Space, slug_name=space_slug_name)
-        subject = "🚀 Your Invitation Awaits"
+        subject = "[SpaceDF] Your Invitation Awaits"
         name_sender = instance.first_name + " " + instance.last_name
 
         for receiver_item in receiver_list:
@@ -127,7 +127,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
-                name_sender, receiver_email, space.name, invite_url
+                name_sender, receiver_email, space.name, invite_url, space.name
             )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
