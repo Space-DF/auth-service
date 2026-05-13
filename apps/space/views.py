@@ -128,7 +128,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
-                name_sender, receiver_email, space.name, invite_url
+                name_sender, receiver_email, space.name, invite_url, space.name
             )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
