@@ -14,4 +14,6 @@ class NewOrganizationHandler(NewOrganizationHandlerBase):
             # Create owner user
             owner = OrganizationUser(email=self._owner.get("email"), is_owner=True)
             owner.password = self._owner.get("password")
+            owner.first_name = self._owner.get("first_name")
+            owner.last_name = self._owner.get("last_name")
             owner.save()
