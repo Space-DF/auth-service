@@ -116,6 +116,11 @@ class InviteUserAPIView(generics.CreateAPIView):
 
         for receiver_item in receiver_list:
             receiver_email = receiver_item.get("email")
+            receiver_user = OrganizationUser.objects.filter(email=receiver_email).first()
+            if receiver_user and (receiver_user.first_name or receiver_user.last_name):
+                receiver_name = f"{receiver_user.first_name} {receiver_user.last_name}".strip()
+            else:
+                receiver_name = ""
             token = generate_token(
                 {
                     "email_receiver": receiver_email,
@@ -128,7 +133,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
-                name_sender, receiver_email, space.name, invite_url, space.name
+                name_sender, receiver_email, space.name, invite_url, space.name, receiver_name
             )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
