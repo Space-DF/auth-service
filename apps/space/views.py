@@ -118,7 +118,7 @@ class InviteUserAPIView(generics.CreateAPIView):
             receiver_email = receiver_item.get("email")
             receiver_user = OrganizationUser.objects.filter(email=receiver_email).first()
             if receiver_user and (receiver_user.first_name or receiver_user.last_name):
-                receiver_name = f"{receiver_user.first_name} {receiver_user.last_name}".strip()
+                receiver_name = f" {receiver_user.first_name} {receiver_user.last_name}".strip()
             else:
                 receiver_name = ""
             token = generate_token(
