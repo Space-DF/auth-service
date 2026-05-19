@@ -114,8 +114,14 @@ class InviteUserAPIView(generics.CreateAPIView):
         subject = "[SpaceDF] Your Invitation Awaits"
         name_sender = instance.first_name + " " + instance.last_name
 
+        emails = [item.get("email") for item in receiver_list if item.get("email")]
+        users_map = {user.email: user for user in OrganizationUser.objects.filter(email__in=emails)}
         for receiver_item in receiver_list:
             receiver_email = receiver_item.get("email")
+            receiver_user = users_map.get(receiver_email)
+            receiver_name = ""
+            if receiver_user:
+                receiver_name = f"{receiver_user.first_name or ''} {receiver_user.last_name or ''}".strip()
             token = generate_token(
                 {
                     "email_receiver": receiver_email,
@@ -128,7 +134,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
-                name_sender, receiver_email, space.name, invite_url, space.name
+                name_sender, receiver_email, space.name, invite_url, space.name, receiver_name
             )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(

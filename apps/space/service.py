@@ -10,7 +10,7 @@ def encode_image_to_base64(image_path):
         return base64.b64encode(img_file.read()).decode("utf-8")
 
 
-def render_email_format(sender, email_receiver, sub_host, invite_url, space_name):
+def render_email_format(sender, email_receiver, sub_host, invite_url, space_name, receiver_name=""):
     try:
         html_message = render_to_string(
             "email_format.html",
@@ -19,6 +19,7 @@ def render_email_format(sender, email_receiver, sub_host, invite_url, space_name
                 "space_name": space_name,
                 "sub_host": sub_host,
                 "email_receiver": email_receiver,
+                "receiver_name": receiver_name,
                 "invite_url": invite_url,
                 "host": settings.HOST,
             },
