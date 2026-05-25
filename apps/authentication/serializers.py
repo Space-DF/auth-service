@@ -7,7 +7,9 @@ from common.apps.refresh_tokens.serializers import (
     TokenPairSerializer,
 )
 from common.apps.space.models import Space
-from common.apps.upload_file.service import delete_file, get_presigned_url
+from common.apps.upload_file.service import get_presigned_url
+from common.celery import constants
+from common.celery.task_senders import send_task
 from common.errors.errors import ExistedEmailError
 from django.conf import settings
 from django.core.cache import cache
@@ -132,9 +134,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
 
         if old_avatar and old_avatar != new_avatar:
-            delete_file(
-                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                f"uploads/{old_avatar}",
+            send_task(
+                name=constants.AUTH_SERVICE_DELETE_UPLOAD_FILE,
+                message={
+                    "bucket_name": settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                    "link_file": f"uploads/{old_avatar}",
+                },
             )
         return instance
 
