@@ -32,6 +32,7 @@ app.autodiscover_tasks(settings.CELERY_TASKS)
 TASKS_AUTH = [
     constants.AUTH_SERVICE_OAUTH_CREDENTIALS_CREATION,
     constants.AUTH_SERVICE_ADD_OR_REMOVE_DEVICE,
+    constants.AUTH_SERVICE_DELETE_UPLOAD_FILE,
 ]
 
 existing = {queue.name: queue for queue in (app.conf.task_queues or ())}
