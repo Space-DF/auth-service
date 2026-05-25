@@ -1,7 +1,9 @@
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
+from common.apps.upload_file.service import delete_file
 from common.celery import constants
 from common.celery.task_senders import send_task
+from django.conf import settings
 from django.db import connection
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
@@ -39,6 +41,13 @@ def create_default_space(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Space)
 def handle_post_delete(sender, instance, **kwargs):
+    if instance.logo:
+        delete_file(
+            settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+            f"uploads/{instance.logo}",
+        )
+
+    # Clear permission cache for all users associated with the space
     user_id = getattr(instance, "created_by", None)
     clear_user_permission_cache(user_id)
 
