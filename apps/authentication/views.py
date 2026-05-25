@@ -223,9 +223,7 @@ class ChangePasswordAPIView(generics.GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProfileAPIView(
-    generics.RetrieveAPIView, generics.UpdateAPIView, generics.DestroyAPIView
-):
+class ProfileAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrganizationUser.objects.all()
     serializer_class = ProfileSerializer
 
