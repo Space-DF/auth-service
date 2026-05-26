@@ -24,6 +24,7 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.service import render_email_format
+from apps.space_role.services import clear_user_permission_cache
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -115,7 +116,10 @@ class InviteUserAPIView(generics.CreateAPIView):
         name_sender = instance.first_name + " " + instance.last_name
 
         emails = [item.get("email") for item in receiver_list if item.get("email")]
-        users_map = {user.email: user for user in OrganizationUser.objects.filter(email__in=emails)}
+        users_map = {
+            user.email: user
+            for user in OrganizationUser.objects.filter(email__in=emails)
+        }
         for receiver_item in receiver_list:
             receiver_email = receiver_item.get("email")
             receiver_user = users_map.get(receiver_email)
@@ -134,7 +138,12 @@ class InviteUserAPIView(generics.CreateAPIView):
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
             message = render_email_format(
-                name_sender, receiver_email, space.name, invite_url, space.name, receiver_name
+                name_sender,
+                receiver_email,
+                space.name,
+                invite_url,
+                space.name,
+                receiver_name,
             )
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
@@ -172,6 +181,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
         SpaceRoleUser.objects.get_or_create(
             space_role=space_role, organization_user=user_organization
         )
+        clear_user_permission_cache(user_organization.id)
         return redirect(f"{sub_host}/invitation?status=success")
 
 
@@ -197,6 +207,7 @@ class AddUserToSpaceAPIView(APIView):
         SpaceRoleUser.objects.get_or_create(
             space_role=space_role, organization_user=user_organization
         )
+        clear_user_permission_cache(user_organization.id)
         return Response({"result": "User added successfully"}, status=200)
 
 
