@@ -223,7 +223,7 @@ class ChangePasswordAPIView(generics.GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProfileAPIView(generics.RetrieveAPIView):
+class ProfileAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrganizationUser.objects.all()
     serializer_class = ProfileSerializer
 
@@ -232,27 +232,3 @@ class ProfileAPIView(generics.RetrieveAPIView):
         if not user_id:
             raise NotFound(detail="The user not found")
         return get_object_or_404(OrganizationUser, id=user_id)
-
-    @swagger_auto_schema(
-        responses={status.HTTP_200_OK: ProfileSerializer()},
-    )
-    def get(self, request: Request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        request_body=ProfileSerializer,
-        responses={status.HTTP_200_OK: ProfileSerializer()},
-    )
-    def put(self, request: Request):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request: Request):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -2,6 +2,8 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRoleUser
 from common.apps.upload_file.service import get_presigned_url
+from common.celery import constants
+from common.celery.task_senders import send_task
 from django.conf import settings
 from django.db.models import Case, CharField, Count, F, Value, When
 from django.db.models.functions import Coalesce, Concat, Length, Trim
@@ -29,6 +31,22 @@ class SpaceSerializer(serializers.ModelSerializer):
         if value.startswith("default"):
             raise serializers.ValidationError("The slug name is invalid.")
         return value
+
+    def update(self, instance, validated_data):
+        old_logo = instance.logo
+        new_logo = validated_data.get("logo", old_logo)
+
+        instance = super().update(instance, validated_data)
+
+        if old_logo and old_logo != new_logo:
+            send_task(
+                name=constants.AUTH_SERVICE_DELETE_UPLOAD_FILE,
+                message={
+                    "bucket_name": settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                    "link_file": f"uploads/{old_logo}",
+                },
+            )
+        return instance
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
