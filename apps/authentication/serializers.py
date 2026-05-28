@@ -8,6 +8,8 @@ from common.apps.refresh_tokens.serializers import (
 )
 from common.apps.space.models import Space
 from common.apps.upload_file.service import get_presigned_url
+from common.celery import constants
+from common.celery.task_senders import send_task
 from common.errors.errors import ExistedEmailError
 from django.conf import settings
 from django.core.cache import cache
@@ -126,35 +128,29 @@ class ProfileSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        try:
-            for attr, value in validated_data.items():
-                setattr(instance, attr, value)
-            instance.save()
-            logger.info(f"Profile updated successfully for user ID: {instance.id}")
-            return instance
-        except Exception as e:
-            logger.error(
-                f"Failed to update profile for user ID {instance.id}: {str(e)}",
-                exc_info=True,
+        old_avatar = instance.avatar
+        new_avatar = validated_data.get("avatar", old_avatar)
+
+        instance = super().update(instance, validated_data)
+
+        if old_avatar and old_avatar != new_avatar:
+            send_task(
+                name=constants.AUTH_SERVICE_DELETE_UPLOAD_FILE,
+                message={
+                    "bucket_name": settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                    "link_file": f"uploads/{old_avatar}",
+                },
             )
-            raise
+        return instance
 
     def to_representation(self, instance):
-        try:
-            data = super().to_representation(instance)
-            if instance.avatar:
-                data["url_avatar"] = get_presigned_url(
-                    settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                    f"uploads/{instance.avatar}",
-                )
-            logger.debug(f"Profile representation completed for user ID: {instance.id}")
-            return data
-        except Exception as e:
-            logger.error(
-                f"Failed to generate profile representation for user ID {instance.id}: {str(e)}",
-                exc_info=True,
+        data = super().to_representation(instance)
+        if instance.avatar:
+            data["url_avatar"] = get_presigned_url(
+                settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
+                f"uploads/{instance.avatar}",
             )
-            raise
+        return data
 
     def get_is_set_password(self, instance):
         return instance.has_usable_password()

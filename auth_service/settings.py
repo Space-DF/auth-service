@@ -211,6 +211,7 @@ SYNCHRONOUS_MODEL = [
 ]
 CELERY_TASKS = [
     "common.apps.organization",
+    "apps.authentication",
     "apps.oauth_credentials",
     "apps.space",
 ]
