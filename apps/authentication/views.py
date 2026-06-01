@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
+from common.utils.email_context import get_reset_password_email_context
 from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
@@ -30,6 +31,7 @@ from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
     generate_otp,
+    get_reset_password_custom_page,
     handle_space_access_token,
     render_email_format,
 )
@@ -145,10 +147,12 @@ class SendEmailToConfirmView(generics.GenericAPIView):
         subject = "🔒 Forgot your password? Reset now"
         token = generate_token({"email": email})
         sub_host = update_subdomain(settings.HOST_FRONTEND, request.tenant.slug_name)
-        data = {
-            "redirect_url": f"{sub_host}/?token={token}&type=forget-password",
-            "host": settings.HOST,
-        }
+        custom_page = get_reset_password_custom_page(request.tenant.slug_name)
+        data = get_reset_password_email_context(
+            settings.HOST,
+            f"{sub_host}/?token={token}&type=forget-password",
+            custom_page=custom_page,
+        )
         message = render_email_format("email_forget_password.html", data)
         send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
         return Response(

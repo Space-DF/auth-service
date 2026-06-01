@@ -98,6 +98,30 @@ def generate_otp(length=6):
     return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
+def get_reset_password_custom_page(organization_slug):
+    if not settings.CONSOLE_SERVICE_URL or not organization_slug:
+        return None
+
+    try:
+        response = requests.get(
+            f"{settings.CONSOLE_SERVICE_URL}/organizations/check/{organization_slug}",
+            timeout=10,
+        )
+        response.raise_for_status()
+        setting = response.json().get("setting") or {}
+        custom_pages = setting.get("custom_pages") or []
+        return next(
+            (
+                page
+                for page in custom_pages
+                if page.get("page_type") == "email_reset_password"
+            ),
+            None,
+        )
+    except requests.RequestException:
+        return None
+
+
 def render_email_format(template, data):
     try:
         html_message = render_to_string(
