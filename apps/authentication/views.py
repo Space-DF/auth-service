@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 
 from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
-from common.utils.email_context import get_reset_password_email_context
+from common.utils.custom_page import get_custom_page
+from common.utils.email_context import get_email_context, render_email_format
 from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
@@ -31,9 +32,7 @@ from apps.authentication.services import (
     create_space_access_token,
     create_space_jwt_tokens,
     generate_otp,
-    get_reset_password_custom_page,
     handle_space_access_token,
-    render_email_format,
 )
 
 
@@ -116,10 +115,18 @@ class SendOTPView(generics.GenericAPIView):
             otp_code = generate_otp()
             email = serializer.validated_data["email"]
             subject = "🌟 Use This Code to Get Started"
-            data = {
-                "host": settings.HOST,
-                "otp_code": otp_code,
-            }
+            custom_page = get_custom_page(
+                request.tenant.slug_name, "email_verification_code"
+            )
+            data = get_email_context(
+                {
+                    "host": settings.HOST,
+                    "otp_code": otp_code,
+                    "page_organization": getattr(request.tenant, "name", ""),
+                },
+                custom_page=custom_page,
+                host=settings.HOST,
+            )
             message = render_email_format("email_otp.html", data)
             send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
             cache.set(f"otp_{email}", otp_code, timeout=600)
@@ -147,11 +154,15 @@ class SendEmailToConfirmView(generics.GenericAPIView):
         subject = "🔒 Forgot your password? Reset now"
         token = generate_token({"email": email})
         sub_host = update_subdomain(settings.HOST_FRONTEND, request.tenant.slug_name)
-        custom_page = get_reset_password_custom_page(request.tenant.slug_name)
-        data = get_reset_password_email_context(
-            settings.HOST,
-            f"{sub_host}/?token={token}&type=forget-password",
+        custom_page = get_custom_page(request.tenant.slug_name, "email_reset_password")
+        data = get_email_context(
+            {
+                "host": settings.HOST,
+                "redirect_url": f"{sub_host}/?token={token}&type=forget-password",
+                "page_organization": getattr(request.tenant, "name", ""),
+            },
             custom_page=custom_page,
+            host=settings.HOST,
         )
         message = render_email_format("email_forget_password.html", data)
         send_email(settings.DEFAULT_FROM_EMAIL, [email], subject, message)
