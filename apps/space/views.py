@@ -4,7 +4,7 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
-from common.utils.custom_page import get_custom_page
+from common.utils.console_client import ConsoleServiceClient
 from common.utils.email_context import get_email_context, render_email_format
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
@@ -26,6 +26,8 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space_role.services import clear_user_permission_cache
+
+console_client = ConsoleServiceClient()
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -115,9 +117,11 @@ class InviteUserAPIView(generics.CreateAPIView):
         space = get_object_or_404(Space, slug_name=space_slug_name)
         subject = "[SpaceDF] Your Invitation Awaits"
         name_sender = instance.first_name + " " + instance.last_name
-        custom_page = get_custom_page(
-            request.tenant.slug_name, "email_invitation_to_space"
+        custom_emails = console_client.get_custom_emails(
+            request.tenant.slug_name,
+            "invitation_to_space",
         )
+        custom_email = custom_emails[0] if custom_emails else {}
 
         emails = [item.get("email") for item in receiver_list if item.get("email")]
         users_map = {
@@ -149,8 +153,7 @@ class InviteUserAPIView(generics.CreateAPIView):
                     "receiver_name": receiver_name,
                     "invite_url": invite_url,
                 },
-                custom_page=custom_page,
-                host=settings.HOST,
+                custom_email=custom_email,
             )
             message = render_email_format("email_format.html", data)
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
