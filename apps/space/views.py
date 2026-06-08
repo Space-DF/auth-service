@@ -4,6 +4,8 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
+from common.utils.console_client import ConsoleServiceClient
+from common.utils.email_context import get_email_context, render_email_format
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
 from common.utils.switch_tenant import UseTenantFromRequestMixin
@@ -23,8 +25,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
-from apps.space.service import render_email_format
 from apps.space_role.services import clear_user_permission_cache
+
+console_client = ConsoleServiceClient()
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -114,6 +117,11 @@ class InviteUserAPIView(generics.CreateAPIView):
         space = get_object_or_404(Space, slug_name=space_slug_name)
         subject = "[SpaceDF] Your Invitation Awaits"
         name_sender = instance.first_name + " " + instance.last_name
+        custom_emails = console_client.get_custom_emails(
+            request.tenant.slug_name,
+            "invitation_to_space",
+        )
+        custom_email = custom_emails[0] if custom_emails else {}
 
         emails = [item.get("email") for item in receiver_list if item.get("email")]
         users_map = {
@@ -137,14 +145,17 @@ class InviteUserAPIView(generics.CreateAPIView):
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
-            message = render_email_format(
-                name_sender,
-                receiver_email,
-                space.name,
-                invite_url,
-                space.name,
-                receiver_name,
+            data = get_email_context(
+                {
+                    "host": settings.HOST,
+                    "sender_name": name_sender,
+                    "space_name": space.name,
+                    "receiver_name": receiver_name,
+                    "invite_url": invite_url,
+                },
+                custom_email=custom_email,
             )
+            message = render_email_format("email_format.html", data)
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
             {"result": "Invitation sent successfully"},

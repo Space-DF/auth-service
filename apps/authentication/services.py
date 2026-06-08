@@ -8,9 +8,7 @@ from common.apps.refresh_tokens.services import create_jwt_tokens
 from common.apps.space_role.models import SpaceRoleUser
 from django.conf import settings
 from django.core.cache import cache
-from django.template.loader import render_to_string
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 
@@ -96,14 +94,3 @@ def handle_space_access_token(request, access_token, provider: Literal["GOOGLE"]
 def generate_otp(length=6):
     """Generate a 6-digit OTP."""
     return "".join(secrets.choice(string.digits) for _ in range(length))
-
-
-def render_email_format(template, data):
-    try:
-        html_message = render_to_string(
-            template,
-            data,
-        )
-        return html_message
-    except Exception as e:
-        raise ValidationError({"error": f"Error: {e}"})
