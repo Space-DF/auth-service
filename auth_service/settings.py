@@ -113,7 +113,6 @@ MIDDLEWARE = [
 ]
 
 if SILK_ENABLED:
-    SHARED_APPS.append("silk")
     MIDDLEWARE.insert(3, "silk.middleware.SilkyMiddleware")
 
     def silky_intercept_func(request):
