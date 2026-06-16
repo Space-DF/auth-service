@@ -223,6 +223,8 @@ class AddUserToSpaceAPIView(APIView):
 
 
 class GetSpaceUsersAPIView(UseTenantFromRequestMixin, APIView):
+    swagger_schema = None
+
     def get(self, request, *args, **kwargs):
         space_slug = kwargs.get("space_slug")
         if not space_slug:
