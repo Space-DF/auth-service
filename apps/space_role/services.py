@@ -5,24 +5,31 @@ from django.db.models import Q
 from apps.space_role.constants import SpaceRoleType
 
 
-def create_default_role_by_policy_tag(space, name, tags):
-    q_filter = Q()
-    for tag in tags:
-        q_filter |= Q(tags__contains=tag)
-    policies = SpacePolicy.objects.filter(q_filter).all()
+def create_default_role_by_policy_tag(space, name, tags, policies=None):
+    if policies is None:
+        q_filter = Q()
+        for tag in tags:
+            q_filter |= Q(tags__contains=tag)
+        policies = SpacePolicy.objects.filter(q_filter).all()
+    else:
+        policies = [
+            policy
+            for policy in policies
+            if any(all(item in policy.tags for item in tag) for tag in tags)
+        ]
+
     space_role = SpaceRole(name=name, space=space)
     space_role.save()
     space_role.policies.set([policy.pk for policy in policies])
-    space_role.save()
     return space_role
 
 
-def create_space_default_role(space):
+def create_space_default_role(space, policies=None):
     owner_role = create_default_role_by_policy_tag(
-        space, SpaceRoleType.ADMIN_ROLE, [["administrator"]]
+        space, SpaceRoleType.ADMIN_ROLE, [["administrator"]], policies
     )
     viewer_role = create_default_role_by_policy_tag(
-        space, SpaceRoleType.VIEWER_ROLE, [["read-only"]]
+        space, SpaceRoleType.VIEWER_ROLE, [["read-only"]], policies
     )
     create_default_role_by_policy_tag(
         space,
@@ -32,6 +39,7 @@ def create_space_default_role(space):
             ["space-role", "read-only"],
             ["space-member", "read-only"],
         ],
+        policies,
     )
 
     return owner_role, viewer_role
