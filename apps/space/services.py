@@ -43,23 +43,26 @@ def get_spaces_queryset_for_user(queryset, user_id):
         .values("value")[:1]
     )
 
+    user_membership = SpaceRoleUser.objects.filter(
+        space_role__space=OuterRef("pk"),
+        organization_user_id=user_id,
+    )
+
+    default_membership = user_membership.filter(is_default=True)
+
+    total_member_count = Subquery(
+        SpaceRoleUser.objects.filter(space_role__space=OuterRef("pk"))
+        .values("space_role__space")
+        .annotate(count=Count("organization_user_id", distinct=True))
+        .values("count")[:1]
+    )
+
     return (
-        queryset.filter(
-            space_role__space_role_user__organization_user_id=user_id,
-            is_active=True,
-        )
+        queryset.filter(is_active=True)
+        .filter(Exists(user_membership))
         .annotate(
             created_by_display=creator_display,
-            total_member_count=Count(
-                "space_role__space_role_user__organization_user", distinct=True
-            ),
-            default_display=Exists(
-                SpaceRoleUser.objects.filter(
-                    space_role__space=OuterRef("pk"),
-                    organization_user_id=user_id,
-                    is_default=True,
-                )
-            ),
+            total_member_count=Coalesce(total_member_count, Value(0)),
+            default_display=Exists(default_membership),
         )
-        .distinct()
     )

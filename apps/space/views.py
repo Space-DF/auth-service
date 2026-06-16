@@ -44,7 +44,7 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
         space_slug = self.request.headers.get("X-Space", None)
         if not space_slug:
             return None
-        return get_object_or_404(Space, slug_name=space_slug)
+        return get_object_or_404(self.get_queryset(), slug_name=space_slug)
 
     def get_queryset(self):
         user_id = self.request.headers.get("X-User-ID", None)
@@ -76,7 +76,9 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
                 or organization_user.email
             )
             instance.total_member_count = 1
-            instance.default_display = True
+            instance.default_display = not SpaceRoleUser.objects.filter(
+                organization_user_id=organization_user.id
+            ).exists()
             return
 
         raise serializers.ValidationError(

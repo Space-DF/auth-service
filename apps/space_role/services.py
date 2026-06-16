@@ -15,7 +15,7 @@ def create_default_role_by_policy_tag(space, name, tags, policies=None):
         policies = [
             policy
             for policy in policies
-            if any(all(item in policy.tags for item in tag) for tag in tags)
+            if any(all(item in (policy.tags or []) for item in tag) for tag in tags)
         ]
 
     space_role = SpaceRole(name=name, space=space)
