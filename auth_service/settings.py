@@ -70,6 +70,7 @@ SHARED_APPS = [
     "common.apps.organization",
     "common.apps.jwks",
     "common.apps.celery_autoreload",
+    "common.apps.migrate_smart",
 ]
 
 if SILK_ENABLED:
