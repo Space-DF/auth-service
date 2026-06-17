@@ -67,6 +67,7 @@ SHARED_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_yasg",
+    "common.apps.migrations",
     "common.apps.organization",
     "common.apps.jwks",
     "common.apps.celery_autoreload",
