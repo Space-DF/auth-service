@@ -1,5 +1,5 @@
 from common.apps.space.models import Space
-from common.apps.space_role.models import SpaceRoleUser
+from common.apps.space_role.models import SpacePolicy, SpaceRoleUser
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -28,7 +28,8 @@ def handle_post_delete(sender, instance, **kwargs):
 @transaction.atomic
 def handle_new_space(sender, instance, created, **kwargs):
     if created:
-        owner_role, _ = create_space_default_role(instance)
+        policies = list(SpacePolicy.objects.all())
+        owner_role, _ = create_space_default_role(instance, policies)
         has_any_space = SpaceRoleUser.objects.filter(
             organization_user_id=instance.created_by
         ).exists()

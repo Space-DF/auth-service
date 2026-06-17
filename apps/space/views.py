@@ -25,6 +25,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
+from apps.space.services import get_spaces_queryset_for_user
 from apps.space_role.services import clear_user_permission_cache
 
 console_client = ConsoleServiceClient()
@@ -43,18 +44,13 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
         space_slug = self.request.headers.get("X-Space", None)
         if not space_slug:
             return None
-        return get_object_or_404(Space, slug_name=space_slug)
+        return get_object_or_404(self.get_queryset(), slug_name=space_slug)
 
     def get_queryset(self):
         user_id = self.request.headers.get("X-User-ID", None)
         if not user_id:
             return self.queryset.none()
-        queryset = self.queryset.filter(
-            space_role__space_role_user__organization_user_id=user_id,
-            is_active=True,
-        ).distinct()
-
-        return queryset
+        return get_spaces_queryset_for_user(self.queryset, user_id)
 
     @transaction.atomic
     def perform_create(self, serializer):
@@ -65,7 +61,24 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
         if not Space.objects.filter(slug_name=slug_name).exists():
             user_id = self.request.headers.get("X-User-ID", "")
             organization_user = get_object_or_404(OrganizationUser, id=user_id)
-            serializer.save(created_by=organization_user.id, slug_name=slug_name)
+            instance = serializer.save(
+                created_by=organization_user.id, slug_name=slug_name
+            )
+            instance.created_by_display = (
+                " ".join(
+                    part
+                    for part in [
+                        organization_user.first_name,
+                        organization_user.last_name,
+                    ]
+                    if part
+                ).strip()
+                or organization_user.email
+            )
+            instance.total_member_count = 1
+            instance.default_display = not SpaceRoleUser.objects.filter(
+                organization_user_id=organization_user.id
+            ).exists()
             return
 
         raise serializers.ValidationError(

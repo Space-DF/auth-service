@@ -127,6 +127,7 @@ if SILK_ENABLED:
     SILKY_MAX_RESPONSE_BODY_SIZE = 0
     SILKY_META = True
     SILKY_INTERCEPT_PERCENT = 10
+    SILKY_MAX_RECORDED_REQUESTS = 500
     SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
 
 ROOT_URLCONF = "auth_service.urls"
@@ -260,6 +261,9 @@ HEADLESS_FRONTEND_URLS = {
 
 # CORS configuration
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+    ","
+)  # noqa
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3000").split(
     ","
 )  # noqa
 
