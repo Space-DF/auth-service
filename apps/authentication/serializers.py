@@ -7,7 +7,7 @@ from common.apps.refresh_tokens.serializers import (
     TokenPairSerializer,
 )
 from common.apps.space.models import Space
-from common.apps.upload_file.service import get_presigned_url
+from common.apps.upload_file.service import get_file_url
 from common.celery import constants
 from common.celery.task_senders import send_task
 from common.errors.errors import ExistedEmailError
@@ -138,7 +138,7 @@ class ProfileSerializer(serializers.ModelSerializer):
                 name=constants.AUTH_SERVICE_DELETE_UPLOAD_FILE,
                 message={
                     "bucket_name": settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                    "link_file": f"uploads/{old_avatar}",
+                    "link_file": old_avatar,
                 },
             )
         return instance
@@ -146,9 +146,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if instance.avatar:
-            data["url_avatar"] = get_presigned_url(
+            data["url_avatar"] = get_file_url(
                 settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-                f"uploads/{instance.avatar}",
+                instance.avatar,
             )
         return data
 

@@ -10,5 +10,5 @@ def cleanup_deleted_user_avatar(sender, instance, **kwargs):
     if instance.avatar:
         delete_file(
             settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-            f"uploads/{instance.avatar}",
+            instance.avatar,
         )

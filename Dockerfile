@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.10-alpine AS builder
 
 ENV PYTHONUNBUFFERED=1
@@ -14,7 +15,8 @@ RUN --mount=type=secret,id=github_token \
     git+https://$(cat /run/secrets/github_token)@github.com/Space-DF/django-common-utils.git@dev
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 FROM python:3.10-alpine
 
@@ -32,5 +34,4 @@ COPY . .
 
 RUN ["chmod", "+x", "./docker-entrypoint.sh"]
 
-# Run the production server
 ENTRYPOINT ["./docker-entrypoint.sh"]

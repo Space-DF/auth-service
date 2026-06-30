@@ -44,7 +44,7 @@ def handle_post_delete(sender, instance, **kwargs):
     if instance.logo:
         delete_file(
             settings.AWS_S3.get("AWS_STORAGE_BUCKET_NAME"),
-            f"uploads/{instance.logo}",
+            instance.logo,
         )
 
     # Clear permission cache for all users associated with the space
