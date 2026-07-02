@@ -1,12 +1,8 @@
-from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
-from common.apps.space_role.models import SpaceRoleUser
 from common.apps.upload_file.service import get_presigned_url
 from common.celery import constants
 from common.celery.task_senders import send_task
 from django.conf import settings
-from django.db.models import Case, CharField, Count, F, Value, When
-from django.db.models.functions import Coalesce, Concat, Length, Trim
 from rest_framework import serializers
 
 
@@ -56,37 +52,14 @@ class SpaceSerializer(serializers.ModelSerializer):
                 f"uploads/{instance.logo}",
             )
 
-        created_by = (
-            OrganizationUser.objects.filter(id=instance.created_by)
-            .annotate(
-                full_name=Concat(
-                    Coalesce(F("first_name"), Value("")),
-                    Value(" "),
-                    Coalesce(F("last_name"), Value("")),
-                    output_field=CharField(),
-                )
-            )
-            .annotate(full_len=Length(Trim(F("full_name"))))
-            .annotate(
-                value=Case(
-                    When(full_len__gt=0, then=F("full_name")),
-                    default=Concat(Value(""), F("email"), output_field=CharField()),
-                    output_field=CharField(),
-                )
-            )
-            .values_list("value", flat=True)
-            .first()
-        )
-        data["created_by"] = created_by
-
-        total_member = SpaceRoleUser.objects.filter(
-            space_role__space=instance.pk
-        ).aggregate(count=Count("organization_user", distinct=True))["count"]
-        data["total_member"] = total_member
+        data["created_by"] = getattr(instance, "created_by_display", None)
+        data["total_member"] = getattr(instance, "total_member_count", None)
 
         return data
 
     def get_default_display(self, obj):
+        if hasattr(obj, "default_display"):
+            return obj.default_display
         request = self.context.get("request")
         user_id = request.headers.get("X-User-ID", None)
         if not user_id:

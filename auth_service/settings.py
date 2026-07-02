@@ -54,6 +54,7 @@ USE_X_FORWARDED_HOST = True
 EMQX_API_URL = os.getenv("EMQX_API_URL", "http://emqx:18083/api/v5")
 EMQX_USERNAME = os.getenv("EMQX_USERNAME", "user1")
 EMQX_PASSWORD = os.getenv("EMQX_PASSWORD", "password123")
+SILK_ENABLED = os.getenv("ENV", "dev").lower() == "dev"
 
 # Application definition
 SHARED_APPS = [
@@ -69,7 +70,11 @@ SHARED_APPS = [
     "common.apps.organization",
     "common.apps.jwks",
     "common.apps.celery_autoreload",
+    "common.apps.migrate_smart",
 ]
+
+if SILK_ENABLED:
+    SHARED_APPS.append("silk")
 
 TENANT_APPS = [
     "django.contrib.admin",
@@ -107,6 +112,24 @@ MIDDLEWARE = [
     "common.middlewares.query_alert_middleware.QueryAlertMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
+
+if SILK_ENABLED:
+    MIDDLEWARE.insert(3, "silk.middleware.SilkyMiddleware")
+
+    def silky_intercept_func(request):
+        return request.path.startswith("/api/")
+
+    SILKY_INTERCEPT_FUNC = silky_intercept_func
+    SILKY_AUTHENTICATION = False
+    SILKY_AUTHORISATION = False
+    SILKY_PYTHON_PROFILER = True
+    SILKY_PYTHON_PROFILER_BINARY = False
+    SILKY_MAX_REQUEST_BODY_SIZE = 1024
+    SILKY_MAX_RESPONSE_BODY_SIZE = 0
+    SILKY_META = True
+    SILKY_INTERCEPT_PERCENT = 10
+    SILKY_MAX_RECORDED_REQUESTS = 500
+    SILKY_MAX_RECORDED_REQUESTS_CHECK_PERCENT = 10
 
 ROOT_URLCONF = "auth_service.urls"
 
@@ -219,7 +242,7 @@ CELERY_TASKS = [
 NEW_ORGANIZATION_HANDLER = "apps.organization_role.handlers.NewOrganizationHandler"
 
 # Middlewares
-PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static"]
+PUBLIC_PATHS = ["/api/.well-known", "/docs", "/static", "/silk/auth"]
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
@@ -239,6 +262,9 @@ HEADLESS_FRONTEND_URLS = {
 
 # CORS configuration
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+    ","
+)  # noqa
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3000").split(
     ","
 )  # noqa
 

@@ -4,6 +4,8 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
+from common.utils.console_client import ConsoleServiceClient
+from common.utils.email_context import get_email_context, render_email_format
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
 from common.utils.switch_tenant import UseTenantFromRequestMixin
@@ -23,7 +25,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
-from apps.space.service import render_email_format
+from apps.space.services import get_spaces_queryset_for_user
+from apps.space_role.services import clear_user_permission_cache
+
+console_client = ConsoleServiceClient()
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
@@ -39,18 +44,13 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
         space_slug = self.request.headers.get("X-Space", None)
         if not space_slug:
             return None
-        return get_object_or_404(Space, slug_name=space_slug)
+        return get_object_or_404(self.get_queryset(), slug_name=space_slug)
 
     def get_queryset(self):
         user_id = self.request.headers.get("X-User-ID", None)
         if not user_id:
             return self.queryset.none()
-        queryset = self.queryset.filter(
-            space_role__space_role_user__organization_user_id=user_id,
-            is_active=True,
-        ).distinct()
-
-        return queryset
+        return get_spaces_queryset_for_user(self.queryset, user_id)
 
     @transaction.atomic
     def perform_create(self, serializer):
@@ -61,7 +61,24 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
         if not Space.objects.filter(slug_name=slug_name).exists():
             user_id = self.request.headers.get("X-User-ID", "")
             organization_user = get_object_or_404(OrganizationUser, id=user_id)
-            serializer.save(created_by=organization_user.id, slug_name=slug_name)
+            instance = serializer.save(
+                created_by=organization_user.id, slug_name=slug_name
+            )
+            instance.created_by_display = (
+                " ".join(
+                    part
+                    for part in [
+                        organization_user.first_name,
+                        organization_user.last_name,
+                    ]
+                    if part
+                ).strip()
+                or organization_user.email
+            )
+            instance.total_member_count = 1
+            instance.default_display = not SpaceRoleUser.objects.filter(
+                organization_user_id=organization_user.id
+            ).exists()
             return
 
         raise serializers.ValidationError(
@@ -113,9 +130,17 @@ class InviteUserAPIView(generics.CreateAPIView):
         space = get_object_or_404(Space, slug_name=space_slug_name)
         subject = "[SpaceDF] Your Invitation Awaits"
         name_sender = instance.first_name + " " + instance.last_name
+        custom_emails = console_client.get_custom_emails(
+            request.tenant.slug_name,
+            "invitation_to_space",
+        )
+        custom_email = custom_emails[0] if custom_emails else {}
 
         emails = [item.get("email") for item in receiver_list if item.get("email")]
-        users_map = {user.email: user for user in OrganizationUser.objects.filter(email__in=emails)}
+        users_map = {
+            user.email: user
+            for user in OrganizationUser.objects.filter(email__in=emails)
+        }
         for receiver_item in receiver_list:
             receiver_email = receiver_item.get("email")
             receiver_user = users_map.get(receiver_email)
@@ -133,9 +158,17 @@ class InviteUserAPIView(generics.CreateAPIView):
             invite_url = request.build_absolute_uri(
                 reverse("space:join_space_redirect", kwargs={"token": token})
             )
-            message = render_email_format(
-                name_sender, receiver_email, space.name, invite_url, space.name, receiver_name
+            data = get_email_context(
+                {
+                    "host": settings.HOST,
+                    "sender_name": name_sender,
+                    "space_name": space.name,
+                    "receiver_name": receiver_name,
+                    "invite_url": invite_url,
+                },
+                custom_email=custom_email,
             )
+            message = render_email_format("email_format.html", data)
             send_email(settings.DEFAULT_FROM_EMAIL, [receiver_email], subject, message)
         return Response(
             {"result": "Invitation sent successfully"},
@@ -172,6 +205,7 @@ class RedirectAddUserToSpaceAPIView(APIView):
         SpaceRoleUser.objects.get_or_create(
             space_role=space_role, organization_user=user_organization
         )
+        clear_user_permission_cache(user_organization.id)
         return redirect(f"{sub_host}/invitation?status=success")
 
 
@@ -197,10 +231,13 @@ class AddUserToSpaceAPIView(APIView):
         SpaceRoleUser.objects.get_or_create(
             space_role=space_role, organization_user=user_organization
         )
+        clear_user_permission_cache(user_organization.id)
         return Response({"result": "User added successfully"}, status=200)
 
 
 class GetSpaceUsersAPIView(UseTenantFromRequestMixin, APIView):
+    swagger_schema = None
+
     def get(self, request, *args, **kwargs):
         space_slug = kwargs.get("space_slug")
         if not space_slug:
