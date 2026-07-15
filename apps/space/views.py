@@ -1,5 +1,6 @@
 import uuid
 
+from common.apps.billing.mixins import QuotaMixin
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
@@ -24,6 +25,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
+from apps.space.quotas import SpaceQuota
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.services import get_spaces_queryset_for_user
 from apps.space_role.services import clear_user_permission_cache
@@ -31,7 +33,11 @@ from apps.space_role.services import clear_user_permission_cache
 console_client = ConsoleServiceClient()
 
 
-class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
+class SpaceView(
+    QuotaMixin,
+    SpaceListCreateAPIView,
+    SpaceRetrieveUpdateDestroyAPIView,
+):
     model = Space
     serializer_class = SpaceSerializer
     queryset = Space.objects.all()
@@ -39,6 +45,7 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["created_at"]
     search_fields = ["name"]
+    quota_classes = [SpaceQuota]
 
     def get_object(self):
         space_slug = self.request.headers.get("X-Space", None)
