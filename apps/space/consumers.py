@@ -3,6 +3,7 @@
 import logging
 
 from common.apps.space.models import Space
+from django_tenants.utils import schema_context
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,7 @@ def deactivate_excess_spaces(organization_slug: str, limits: dict = None) -> int
             organization_slug,
         )
         return 0
-    from django_tenants.utils import schema_context
-    
+
     with schema_context(organization_slug):
         spaces = Space.objects.filter(
             is_deactivated=False
@@ -41,5 +41,20 @@ def deactivate_excess_spaces(organization_slug: str, limits: dict = None) -> int
                 organization_slug,
                 min(total, max_spaces),
                 total,
+            )
+        return count
+
+
+def reactivate_spaces(organization_slug: str) -> int:
+    """
+    Reactivate spaces that were deactivated during a prior downgrade.
+    """
+    with schema_context(organization_slug):
+        count = Space.objects.filter(is_deactivated=True).update(is_deactivated=False)
+        if count:
+            logger.info(
+                "Renewal: reactivated %s spaces for org %s.",
+                count,
+                organization_slug,
             )
         return count

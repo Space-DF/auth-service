@@ -9,6 +9,28 @@ from django.db.models.functions import Greatest
 from django.db.utils import ProgrammingError
 from django_tenants.utils import schema_context
 
+from apps.space.consumers import deactivate_excess_spaces, reactivate_spaces
+
+
+@task(
+    name="spacedf.tasks.space_downgrade",
+    autoretry_for=(Exception,),
+    retry_backoff=2,
+    max_retries=3,
+)
+def space_downgrade_task(**kwargs):
+    return deactivate_excess_spaces(kwargs["org_slug"], kwargs.get("limits"))
+
+
+@task(
+    name="spacedf.tasks.space_upgrade",
+    autoretry_for=(Exception,),
+    retry_backoff=2,
+    max_retries=3,
+)
+def space_upgrade_task(**kwargs):
+    return reactivate_spaces(kwargs["org_slug"])
+
 
 # TODO: need function on device service call this task
 @task(

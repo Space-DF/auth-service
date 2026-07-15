@@ -13,6 +13,7 @@ from celery import Celery
 from common.celery import constants  # noqa
 from common.celery.routing import (
     setup_organization_task_routing,
+    setup_subscription_task_routing,
     setup_synchronous_model_task_routing,
 )
 from django.conf import settings
@@ -26,6 +27,7 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 setup_organization_task_routing()
 setup_synchronous_model_task_routing()
+setup_subscription_task_routing(["space_downgrade", "space_upgrade"])
 
 app.autodiscover_tasks(settings.CELERY_TASKS)
 
