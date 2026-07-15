@@ -19,17 +19,11 @@ def deactivate_excess_spaces(organization_slug: str, limits: dict = None) -> int
         return 0
 
     with schema_context(organization_slug):
-        spaces = Space.objects.filter(
-            is_deactivated=False
-        ).order_by("created_at")
+        spaces = Space.objects.filter(is_deactivated=False).order_by("created_at")
         total = spaces.count()
-        excess_ids = list(
-            spaces.values_list("id", flat=True)[max_spaces:]
-        )
+        excess_ids = list(spaces.values_list("id", flat=True)[max_spaces:])
         count = (
-            Space.objects.filter(id__in=excess_ids).update(
-                is_deactivated=True
-            )
+            Space.objects.filter(id__in=excess_ids).update(is_deactivated=True)
             if excess_ids
             else 0
         )
