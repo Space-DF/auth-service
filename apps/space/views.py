@@ -4,7 +4,7 @@ from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
 from common.pagination.base_pagination import BasePagination
-from common.utils import console_client
+from common.utils.console_client import ConsoleServiceClient
 from common.utils.email_context import get_email_context, render_email_format
 from common.utils.send_email import send_email
 from common.utils.subdomain import update_subdomain
@@ -27,6 +27,8 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.services import get_spaces_queryset_for_user
 from apps.space_role.services import clear_user_permission_cache
+
+console_client = ConsoleServiceClient()
 
 
 class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):

@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from common.apps.oauth2.serializers import CodeLoginSerializer
 from common.apps.organization_user.models import OrganizationUser
-from common.utils import console_client
+from common.utils.console_client import ConsoleServiceClient
 from common.utils.email_context import get_email_context, render_email_format
 from common.utils.oauth2 import get_access_token_with_code
 from common.utils.send_email import send_email
@@ -34,6 +34,8 @@ from apps.authentication.services import (
     generate_otp,
     handle_space_access_token,
 )
+
+console_client = ConsoleServiceClient()
 
 
 class RegistrationAPIView(generics.GenericAPIView):
