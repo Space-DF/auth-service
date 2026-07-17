@@ -33,9 +33,24 @@ def space_downgrade_task(**kwargs):
         return 0
 
     with schema_context(org_slug):
-        spaces = Space.objects.filter(is_deactivated=False).order_by("created_at")
-        total = spaces.count()
-        excess_ids = list(spaces.values_list("id", flat=True)[max_spaces:])
+        # 1. fetch all active spaces ordered by owner, then created_at
+        # 2. one bulk update of the collected excess ids.
+        rows = list(
+            Space.objects.filter(is_deactivated=False)
+            .values_list("id", "created_by")
+            .order_by("created_by", "created_at")
+        )
+        excess_ids = []
+        seen_owner = None
+        owner_count = 0
+        for space_id, owner_id in rows:
+            if owner_id != seen_owner:
+                seen_owner = owner_id
+                owner_count = 0
+            owner_count += 1
+            if owner_count > max_spaces:
+                excess_ids.append(space_id)
+
         count = (
             Space.objects.filter(id__in=excess_ids).update(is_deactivated=True)
             if excess_ids
@@ -44,11 +59,10 @@ def space_downgrade_task(**kwargs):
         if count:
             logger.info(
                 "Downgrade: deactivated %s excess spaces for org %s "
-                "(kept %s active out of %s total).",
+                "(user limit %s).",
                 count,
                 org_slug,
-                min(total, max_spaces),
-                total,
+                max_spaces,
             )
         return count
 
