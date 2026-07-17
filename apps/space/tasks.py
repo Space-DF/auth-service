@@ -1,6 +1,7 @@
 import logging
 from operator import itemgetter
 
+from common.apps.billing.constants import FeatureCode
 from common.apps.space.models import Space
 from common.celery import constants
 from common.celery.tasks import task
@@ -22,11 +23,12 @@ logger = logging.getLogger(__name__)
 def space_downgrade_task(**kwargs):
     org_slug = kwargs["org_slug"]
     limits = kwargs.get("limits") or {}
-    max_spaces = limits.get("space.max_count")
+    max_spaces = limits.get(FeatureCode.SPACE_MAX_COUNT)
     if max_spaces is None:
         logger.warning(
-            "Skipping space deactivation for %s: space.max_count not in event",
+            "Skipping space deactivation for %s: %s not in event",
             org_slug,
+            FeatureCode.SPACE_MAX_COUNT,
         )
         return 0
 
