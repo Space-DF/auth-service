@@ -8,10 +8,10 @@ class SpaceQuota(BaseQuota):
     rules = {
         "create": {
             "feature": FeatureCode.SPACE_MAX_COUNT,
-            "scope": FeatureUsageScope.ORGANIZATION,
+            "scope": FeatureUsageScope.USER,
         },
         "destroy": {
             "feature": FeatureCode.SPACE_MAX_COUNT,
-            "scope": FeatureUsageScope.ORGANIZATION,
+            "scope": FeatureUsageScope.USER,
         },
     }
