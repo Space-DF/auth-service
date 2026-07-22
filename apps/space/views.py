@@ -51,7 +51,9 @@ class SpaceView(
         space_slug = self.request.headers.get("X-Space", None)
         if not space_slug:
             return None
-        return get_object_or_404(self.get_queryset(), slug_name=space_slug)
+        space = get_object_or_404(self.get_queryset(), slug_name=space_slug)
+        self.check_deactivated(space)
+        return space
 
     def get_queryset(self):
         user_id = self.request.headers.get("X-User-ID", None)
@@ -115,6 +117,29 @@ class SpaceView(
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SpaceCheckAPIView(APIView):
+    authentication_classes = []
+
+    def get(self, request, slug_name):
+        space = Space.objects.filter(slug_name=slug_name).first()
+        if not space:
+            return Response(
+                {"result": f"Space with slug '{slug_name}' not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if space.is_deactivated:
+            return Response(
+                {"result": "The space is deactivated!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return Response(
+            {"result": "The space is valid."},
+            status=status.HTTP_200_OK,
+        )
 
 
 class InviteUserAPIView(generics.CreateAPIView):
