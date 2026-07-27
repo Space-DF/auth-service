@@ -32,6 +32,8 @@ def space_downgrade_task(**kwargs):
         )
         return 0
 
+    downgraded_at = kwargs.get("downgraded_at")
+
     with schema_context(org_slug):
         # 1. fetch all active spaces ordered by owner, then created_at
         # 2. one bulk update of the collected excess ids.
@@ -52,7 +54,9 @@ def space_downgrade_task(**kwargs):
                 excess_ids.append(space_id)
 
         count = (
-            Space.objects.filter(id__in=excess_ids).update(is_deactivated=True)
+            Space.objects.filter(id__in=excess_ids).update(
+                is_deactivated=True, deactivated_at=downgraded_at
+            )
             if excess_ids
             else 0
         )
@@ -76,7 +80,9 @@ def space_downgrade_task(**kwargs):
 def space_upgrade_task(**kwargs):
     org_slug = kwargs["org_slug"]
     with schema_context(org_slug):
-        count = Space.objects.filter(is_deactivated=True).update(is_deactivated=False)
+        count = Space.objects.filter(is_deactivated=True).update(
+            is_deactivated=False, deactivated_at=None
+        )
         if count:
             logger.info(
                 "Renewal: reactivated %s spaces for org %s.",
