@@ -5,6 +5,7 @@ from apps.space.views import (
     GetSpaceUsersAPIView,
     InviteUserAPIView,
     RedirectAddUserToSpaceAPIView,
+    SpaceCheckAPIView,
     SpaceView,
 )
 
@@ -15,6 +16,11 @@ urlpatterns = [
         "spaces",
         SpaceView.as_view(),
         name="spaces",
+    ),
+    path(
+        "spaces/check/<str:slug_name>",
+        SpaceCheckAPIView.as_view(),
+        name="space_check",
     ),
     path(
         "spaces/<str:space_slug>/users",

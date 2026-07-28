@@ -1,5 +1,6 @@
 import uuid
 
+from common.apps.billing.mixins import QuotaMixin
 from common.apps.organization_user.models import OrganizationUser
 from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRole, SpaceRoleUser
@@ -24,6 +25,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
+from apps.space.quotas import SpaceQuota
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
 from apps.space.services import get_spaces_queryset_for_user
 from apps.space_role.services import clear_user_permission_cache
@@ -31,7 +33,11 @@ from apps.space_role.services import clear_user_permission_cache
 console_client = ConsoleServiceClient()
 
 
-class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
+class SpaceView(
+    QuotaMixin,
+    SpaceListCreateAPIView,
+    SpaceRetrieveUpdateDestroyAPIView,
+):
     model = Space
     serializer_class = SpaceSerializer
     queryset = Space.objects.all()
@@ -39,12 +45,15 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
     filter_backends = [OrderingFilter, SearchFilter]
     ordering_fields = ["created_at"]
     search_fields = ["name"]
+    quota_classes = [SpaceQuota]
 
     def get_object(self):
         space_slug = self.request.headers.get("X-Space", None)
         if not space_slug:
             return None
-        return get_object_or_404(self.get_queryset(), slug_name=space_slug)
+        space = get_object_or_404(self.get_queryset(), slug_name=space_slug)
+        self.check_deactivated(space)
+        return space
 
     def get_queryset(self):
         user_id = self.request.headers.get("X-User-ID", None)
@@ -108,6 +117,29 @@ class SpaceView(SpaceListCreateAPIView, SpaceRetrieveUpdateDestroyAPIView):
 
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SpaceCheckAPIView(APIView):
+    authentication_classes = []
+
+    def get(self, request, slug_name):
+        space = Space.objects.filter(slug_name=slug_name).first()
+        if not space:
+            return Response(
+                {"result": f"Space with slug '{slug_name}' not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if space.is_deactivated:
+            return Response(
+                {"result": "The space is deactivated!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return Response(
+            {"result": "The space is valid."},
+            status=status.HTTP_200_OK,
+        )
 
 
 class InviteUserAPIView(generics.CreateAPIView):

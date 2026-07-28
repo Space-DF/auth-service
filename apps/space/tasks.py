@@ -1,5 +1,7 @@
+import logging
 from operator import itemgetter
 
+from common.apps.billing.constants import FeatureCode
 from common.apps.space.models import Space
 from common.celery import constants
 from common.celery.tasks import task
@@ -8,6 +10,86 @@ from django.db.models import BooleanField, Case, F, IntegerField, Value, When
 from django.db.models.functions import Greatest
 from django.db.utils import ProgrammingError
 from django_tenants.utils import schema_context
+
+logger = logging.getLogger(__name__)
+
+
+@task(
+    name="spacedf.tasks.space_downgrade",
+    autoretry_for=(Exception,),
+    retry_backoff=2,
+    max_retries=3,
+)
+def space_downgrade_task(**kwargs):
+    org_slug = kwargs["org_slug"]
+    limits = kwargs.get("limits") or {}
+    max_spaces = limits.get(FeatureCode.SPACE_MAX_COUNT)
+    if max_spaces is None:
+        logger.warning(
+            "Skipping space deactivation for %s: %s not in event",
+            org_slug,
+            FeatureCode.SPACE_MAX_COUNT,
+        )
+        return 0
+
+    downgraded_at = kwargs.get("downgraded_at")
+
+    with schema_context(org_slug):
+        # 1. fetch all active spaces ordered by owner, then created_at
+        # 2. one bulk update of the collected excess ids.
+        rows = list(
+            Space.objects.filter(is_deactivated=False)
+            .values_list("id", "created_by")
+            .order_by("created_by", "created_at")
+        )
+        excess_ids = []
+        seen_owner = None
+        owner_count = 0
+        for space_id, owner_id in rows:
+            if owner_id != seen_owner:
+                seen_owner = owner_id
+                owner_count = 0
+            owner_count += 1
+            if owner_count > max_spaces:
+                excess_ids.append(space_id)
+
+        count = (
+            Space.objects.filter(id__in=excess_ids).update(
+                is_deactivated=True, deactivated_at=downgraded_at
+            )
+            if excess_ids
+            else 0
+        )
+        if count:
+            logger.info(
+                "Downgrade: deactivated %s excess spaces for org %s "
+                "(user limit %s).",
+                count,
+                org_slug,
+                max_spaces,
+            )
+        return count
+
+
+@task(
+    name="spacedf.tasks.space_upgrade",
+    autoretry_for=(Exception,),
+    retry_backoff=2,
+    max_retries=3,
+)
+def space_upgrade_task(**kwargs):
+    org_slug = kwargs["org_slug"]
+    with schema_context(org_slug):
+        count = Space.objects.filter(is_deactivated=True).update(
+            is_deactivated=False, deactivated_at=None
+        )
+        if count:
+            logger.info(
+                "Renewal: reactivated %s spaces for org %s.",
+                count,
+                org_slug,
+            )
+        return count
 
 
 # TODO: need function on device service call this task
