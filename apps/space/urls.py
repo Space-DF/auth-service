@@ -23,7 +23,7 @@ urlpatterns = [
         name="space_check",
     ),
     path(
-        "spaces/<str:space_slug>/users",
+        "users",
         GetSpaceUsersAPIView.as_view(),
         name="get_user_ids",
     ),
