@@ -27,7 +27,10 @@ from rest_framework_simplejwt.tokens import AccessToken, UntypedToken
 
 from apps.space.quotas import SpaceQuota
 from apps.space.serializers import InviteUserSerial, SpaceSerializer
-from apps.space.services import get_spaces_queryset_for_user
+from apps.space.services import (
+    get_spaces_queryset_for_user,
+    get_users_default_spaces_payload,
+)
 from apps.space_role.services import clear_user_permission_cache
 
 console_client = ConsoleServiceClient()
@@ -271,11 +274,13 @@ class GetSpaceUsersAPIView(UseTenantFromRequestMixin, APIView):
     swagger_schema = None
 
     def get(self, request, *args, **kwargs):
-        space_slug = kwargs.get("space_slug")
+        space_slug = kwargs.get("space_slug") or request.headers.get("X-Space")
         if not space_slug:
+            user_ids = OrganizationUser.objects.values_list("id", flat=True).distinct()
+
             return Response(
-                {"error": "Space slug is required"},
-                status=status.HTTP_400_BAD_REQUEST,
+                get_users_default_spaces_payload(user_ids),
+                status=status.HTTP_200_OK,
             )
 
         space = get_object_or_404(Space, slug_name=space_slug)
@@ -287,9 +292,10 @@ class GetSpaceUsersAPIView(UseTenantFromRequestMixin, APIView):
             .distinct()
         )
 
+        user_ids = list(user_ids)
         return Response(
             {
-                "user_ids": list(user_ids),
+                "user_ids": [str(user_id) for user_id in user_ids],
                 "total_users": len(user_ids),
             },
             status=status.HTTP_200_OK,
