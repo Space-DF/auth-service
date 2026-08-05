@@ -4,9 +4,9 @@ from operator import itemgetter
 from common.apps.billing.constants import FeatureCode
 from common.apps.space.models import Space
 from common.celery import constants
-from common.celery.tasks import task
+from common.celery.tasks import PermanentTaskError, task
 from django.db import transaction
-from django.db.models import BooleanField, Case, F, IntegerField, Value, When
+from django.db.models import BooleanField, Case, Count, F, IntegerField, Value, When
 from django.db.models.functions import Greatest
 from django.db.utils import ProgrammingError
 from django_tenants.utils import schema_context
@@ -14,23 +14,30 @@ from django_tenants.utils import schema_context
 logger = logging.getLogger(__name__)
 
 
+def _is_unlimited(kwargs, feature_code):
+    return feature_code in set(kwargs.get("unlimited_features") or [])
+
+
 @task(
-    name="spacedf.tasks.space_downgrade",
+    name="spacedf.tasks.auth_downgrade",
     autoretry_for=(Exception,),
     retry_backoff=2,
     max_retries=3,
 )
-def space_downgrade_task(**kwargs):
+def auth_downgrade_task(**kwargs):
     org_slug = kwargs["org_slug"]
     limits = kwargs.get("limits") or {}
     max_spaces = limits.get(FeatureCode.SPACE_MAX_COUNT)
     if max_spaces is None:
-        logger.warning(
-            "Skipping space deactivation for %s: %s not in event",
-            org_slug,
-            FeatureCode.SPACE_MAX_COUNT,
+        raise PermanentTaskError(
+            "auth downgrade requires limit %s for org %s"
+            % (FeatureCode.SPACE_MAX_COUNT, org_slug)
         )
-        return 0
+    if max_spaces < 0:
+        raise PermanentTaskError(
+            "auth downgrade limit %s must be >= 0 for org %s"
+            % (FeatureCode.SPACE_MAX_COUNT, org_slug)
+        )
 
     downgraded_at = kwargs.get("downgraded_at")
 
@@ -72,17 +79,58 @@ def space_downgrade_task(**kwargs):
 
 
 @task(
-    name="spacedf.tasks.space_upgrade",
+    name="spacedf.tasks.auth_upgrade",
     autoretry_for=(Exception,),
     retry_backoff=2,
     max_retries=3,
 )
-def space_upgrade_task(**kwargs):
+def auth_upgrade_task(**kwargs):
     org_slug = kwargs["org_slug"]
-    with schema_context(org_slug):
-        count = Space.objects.filter(is_deactivated=True).update(
-            is_deactivated=False, deactivated_at=None
+    limits = kwargs.get("limits") or {}
+    max_spaces = limits.get(FeatureCode.SPACE_MAX_COUNT)
+    unlimited_spaces = _is_unlimited(kwargs, FeatureCode.SPACE_MAX_COUNT)
+    if max_spaces is None and not unlimited_spaces:
+        raise PermanentTaskError(
+            "auth upgrade requires limit or explicit unlimited feature %s for org %s"
+            % (FeatureCode.SPACE_MAX_COUNT, org_slug)
         )
+    if max_spaces is not None and max_spaces < 0:
+        raise PermanentTaskError(
+            "auth upgrade limit %s must be >= 0 for org %s"
+            % (FeatureCode.SPACE_MAX_COUNT, org_slug)
+        )
+
+    with schema_context(org_slug):
+        if max_spaces is None:
+            count = Space.objects.filter(is_deactivated=True).update(
+                is_deactivated=False, deactivated_at=None
+            )
+        else:
+            active_counts = {
+                row["created_by"]: row["count"]
+                for row in Space.objects.filter(is_deactivated=False)
+                .values("created_by")
+                .annotate(count=Count("id"))
+            }
+            reactivated_ids = []
+            for space_id, owner_id in (
+                Space.objects.filter(is_deactivated=True)
+                .values_list("id", "created_by")
+                .order_by("created_by", "created_at")
+            ):
+                owner_active_count = active_counts.get(owner_id, 0)
+                if owner_active_count >= max_spaces:
+                    continue
+                reactivated_ids.append(space_id)
+                active_counts[owner_id] = owner_active_count + 1
+
+            count = (
+                Space.objects.filter(id__in=reactivated_ids).update(
+                    is_deactivated=False, deactivated_at=None
+                )
+                if reactivated_ids
+                else 0
+            )
         if count:
             logger.info(
                 "Renewal: reactivated %s spaces for org %s.",
