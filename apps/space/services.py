@@ -1,6 +1,7 @@
 import base64
 
 from common.apps.organization_user.models import OrganizationUser
+from common.apps.space.models import Space
 from common.apps.space_role.models import SpaceRoleUser
 from django.db.models import (
     Case,
@@ -66,3 +67,27 @@ def get_spaces_queryset_for_user(queryset, user_id):
             default_display=Exists(default_membership),
         )
     )
+
+
+def get_users_default_spaces_payload(user_ids):
+    user_ids = list(user_ids)
+    default_spaces = {
+        str(item["created_by"]): item["slug_name"]
+        for item in Space.objects.filter(
+            created_by__in=user_ids,
+            is_default=True,
+            is_active=True,
+        ).values("created_by", "slug_name")
+    }
+
+    users = [
+        {
+            "id": str(user_id),
+            "slug_name": default_spaces.get(str(user_id)),
+        }
+        for user_id in user_ids
+    ]
+    return {
+        "total_users": len(user_ids),
+        "users": users,
+    }
