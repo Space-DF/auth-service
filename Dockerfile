@@ -9,9 +9,12 @@ RUN apk add --no-cache \
 
 WORKDIR /install
 
+# Pinned by CI to the commit image-plan.py hashed into this image's content
+# key. Defaults to dev so a hand build still works.
+ARG COMMON_UTILS_REF=dev
 RUN --mount=type=secret,id=github_token \
     pip install --no-cache-dir --prefix=/install \
-    git+https://$(cat /run/secrets/github_token)@github.com/Space-DF/django-common-utils.git@dev
+    git+https://$(cat /run/secrets/github_token)@github.com/Space-DF/django-common-utils.git@${COMMON_UTILS_REF}
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
