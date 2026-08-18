@@ -19,7 +19,7 @@ drf-yasg==1.21.7
 whitenoise==6.7.0
 django-filter==24.2
 requests==2.33.0
-django-allauth==65.0.2
+django-allauth==65.14.1
 django-silk==5.3.2
 
 django-redis==5.4.0
