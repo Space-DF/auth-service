@@ -28,6 +28,9 @@ ENV DJANGO_SETTINGS_MODULE="auth_service.settings"
 ENV PATH="/install/.venv/bin:$PATH"
 ENV PYTHONPATH="/app"
 
+# The base image's CA bundle can lag Alpine's; pull the current one.
+RUN apk upgrade --no-cache ca-certificates ca-certificates-bundle
+
 RUN apk add --no-cache \
     curl \
     libffi
